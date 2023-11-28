@@ -6820,13 +6820,15 @@ async function run() {
 /***/ }),
 
 /***/ 3248:
-/***/ ((module, __webpack_exports__, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
 __nccwpck_require__.r(__webpack_exports__);
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "parsePR": () => (/* binding */ parsePR)
+/* harmony export */ });
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5375);
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
-/* module decorator */ module = __nccwpck_require__.hmd(module);
 
 const core = __nccwpck_require__(2186)
 
@@ -6846,20 +6848,6 @@ async function getDiffString(owner, repo, pull_number) {
     }
   })
   return response.data
-}
-
-async function parsePR(pullRequest, files_to_ignore) {
-  const owner = pullRequest.base.repo.owner.login
-  const repo = pullRequest.base.repo.name
-  const pull_number = pullRequest.number
-  const diffString = await getDiffString(owner, repo, pull_number)
-  const changes = parseDiff(diffString, files_to_ignore)
-  console.log('Changes are: ', changes)
-  return {
-    title: pullRequest.title,
-    body: pullRequest.body,
-    changes
-  }
 }
 
 function parseDiff(diffString, files_to_ignore) {
@@ -6914,7 +6902,19 @@ function parseDiff(diffString, files_to_ignore) {
   return changes
 }
 
-module.exports = { parsePR }
+async function parsePR(pullRequest, files_to_ignore) {
+  const owner = pullRequest.base.repo.owner.login
+  const repo = pullRequest.base.repo.name
+  const pull_number = pullRequest.number
+  const diffString = await getDiffString(owner, repo, pull_number)
+  const changes = parseDiff(diffString, files_to_ignore)
+  console.log('Changes are: ', changes)
+  return {
+    title: pullRequest.title,
+    body: pullRequest.body,
+    changes
+  }
+}
 
 
 /***/ }),
@@ -7021,8 +7021,8 @@ module.exports = require("util");
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -7034,9 +7034,6 @@ module.exports = require("util");
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
-/******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -7064,21 +7061,6 @@ module.exports = require("util");
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/harmony module decorator */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.hmd = (module) => {
-/******/ 			module = Object.create(module);
-/******/ 			if (!module.children) module.children = [];
-/******/ 			Object.defineProperty(module, 'exports', {
-/******/ 				enumerable: true,
-/******/ 				set: () => {
-/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
-/******/ 				}
-/******/ 			});
-/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	

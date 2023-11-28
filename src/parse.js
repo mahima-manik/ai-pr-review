@@ -19,20 +19,6 @@ async function getDiffString(owner, repo, pull_number) {
   return response.data
 }
 
-async function parsePR(pullRequest, files_to_ignore) {
-  const owner = pullRequest.base.repo.owner.login
-  const repo = pullRequest.base.repo.name
-  const pull_number = pullRequest.number
-  const diffString = await getDiffString(owner, repo, pull_number)
-  const changes = parseDiff(diffString, files_to_ignore)
-  console.log('Changes are: ', changes)
-  return {
-    title: pullRequest.title,
-    body: pullRequest.body,
-    changes
-  }
-}
-
 function parseDiff(diffString, files_to_ignore) {
   const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
   let match
@@ -85,4 +71,16 @@ function parseDiff(diffString, files_to_ignore) {
   return changes
 }
 
-module.exports = { parsePR }
+export async function parsePR(pullRequest, files_to_ignore) {
+  const owner = pullRequest.base.repo.owner.login
+  const repo = pullRequest.base.repo.name
+  const pull_number = pullRequest.number
+  const diffString = await getDiffString(owner, repo, pull_number)
+  const changes = parseDiff(diffString, files_to_ignore)
+  console.log('Changes are: ', changes)
+  return {
+    title: pullRequest.title,
+    body: pullRequest.body,
+    changes
+  }
+}
