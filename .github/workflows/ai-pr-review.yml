@@ -1,4 +1,6 @@
-on: 
+name: AI PR review
+
+on:
   pull_request:
     types: [opened, synchronize, reopened]
 
