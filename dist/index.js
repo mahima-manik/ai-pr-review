@@ -6790,7 +6790,7 @@ function wrappy (fn, cb) {
 "use strict";
 __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */   "run": () => (/* binding */ run)
 /* harmony export */ });
 const core = __nccwpck_require__(2186)
 const { parsePR } = __nccwpck_require__(3248)
@@ -6811,10 +6811,6 @@ async function run() {
     core.setFailed(error.message)
   }
 }
-
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
-  run
-});
 
 
 /***/ }),

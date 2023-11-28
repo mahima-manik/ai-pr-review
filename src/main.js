@@ -5,7 +5,7 @@ const { parsePR } = require('./parse')
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
-async function run() {
+export async function run() {
   try {
     const pr_diff = await parsePR()
     console.log('PR diff is: ', pr_diff)
@@ -16,8 +16,4 @@ async function run() {
     // Fail the workflow run if an error occurs
     core.setFailed(error.message)
   }
-}
-
-export default {
-  run
 }
