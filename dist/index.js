@@ -2722,10 +2722,109 @@ exports["default"] = _default;
 
 /***/ }),
 
-/***/ 713:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ 154:
+/***/ ((module, __webpack_exports__, __nccwpck_require__) => {
+
+"use strict";
+// ESM COMPAT FLAG
+__nccwpck_require__.r(__webpack_exports__);
+
+// EXTERNAL MODULE: ./node_modules/@vercel/ncc/dist/ncc/@@notfound.js?@octokit/rest
+var rest = __nccwpck_require__(785);
+;// CONCATENATED MODULE: ./src/parse.js
 
 const core = __nccwpck_require__(186)
+
+const octokit = new rest.Octokit({
+  auth: core.getInput('github-token')
+})
+
+async function getDiffString(owner, repo, pull_number) {
+  console.log('Getting diff for: ', owner, repo, pull_number)
+
+  const response = await octokit.rest.pulls.get({
+    owner,
+    repo,
+    pull_number,
+    mediaType: {
+      format: 'diff'
+    }
+  })
+  return response.data
+}
+
+async function parsePR(pullRequest, files_to_ignore) {
+  const owner = pullRequest.base.repo.owner.login
+  const repo = pullRequest.base.repo.name
+  const pull_number = pullRequest.number
+  const diffString = await getDiffString(owner, repo, pull_number)
+  const changes = parseDiff(diffString, files_to_ignore)
+  console.log('Changes are: ', changes)
+  return {
+    title: pullRequest.title,
+    body: pullRequest.body,
+    changes
+  }
+}
+
+function parseDiff(diffString, files_to_ignore) {
+  const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
+  let match
+  const changes = []
+
+  while ((match = fileDiffRegex.exec(diffString)) !== null) {
+    const filename = match[1] // Extract filename directly from the regex match
+
+    // Ignore files in the ignore list
+    if (files_to_ignore.includes(filename)) {
+      console.log(`Ignoring ${filename}`)
+      continue
+    }
+
+    const start = match.index
+    const end = diffString.indexOf('diff --git', start + 1)
+    const fileDiff = diffString.substring(start, end > -1 ? end : undefined)
+
+    const lines = fileDiff.split('\n')
+    let codeBeforeChange = ''
+    let codeAfterChange = ''
+    let inChangeBlock = false
+
+    for (const line of lines) {
+      if (
+        line.startsWith('--- a/') ||
+        line.startsWith('+++ b/') ||
+        line.startsWith('@@')
+      ) {
+        inChangeBlock = true
+      } else if (inChangeBlock) {
+        if (line.startsWith('-')) {
+          codeBeforeChange += `${line.slice(1)}\n`
+        } else if (line.startsWith('+')) {
+          codeAfterChange += `${line.slice(1)}\n`
+        } else {
+          codeBeforeChange += `${line}\n`
+          codeAfterChange += `${line}\n`
+        }
+      }
+    }
+
+    changes.push({
+      filename,
+      code_before_change: codeBeforeChange,
+      code_after_change: codeAfterChange
+    })
+  }
+
+  return changes
+}
+
+
+
+;// CONCATENATED MODULE: ./src/main.js
+/* module decorator */ module = __nccwpck_require__.hmd(module);
+const main_core = __nccwpck_require__(186)
+;
 
 /**
  * The main function for the action.
@@ -2733,17 +2832,28 @@ const core = __nccwpck_require__(186)
  */
 async function run() {
   try {
-    const files_to_ignore = core.getInput('files-to-ignore')
-    core.setOutput('comments', files_to_ignore)
+    const pr_diff = await parsePR()
+    console.log('PR diff is: ', pr_diff)
+
+    const files_to_ignore = main_core.getInput('files-to-ignore')
+    main_core.setOutput('comments', files_to_ignore)
   } catch (error) {
     // Fail the workflow run if an error occurs
-    core.setFailed(error.message)
+    main_core.setFailed(error.message)
   }
 }
 
 module.exports = {
   run
 }
+
+
+/***/ }),
+
+/***/ 785:
+/***/ ((module) => {
+
+module.exports = eval("require")("@octokit/rest");
 
 
 /***/ }),
@@ -2850,8 +2960,8 @@ module.exports = require("util");
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
+/******/ 			id: moduleId,
+/******/ 			loaded: false,
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -2864,11 +2974,40 @@ module.exports = require("util");
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
 /******/ 	
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
 /************************************************************************/
+/******/ 	/* webpack/runtime/harmony module decorator */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.hmd = (module) => {
+/******/ 			module = Object.create(module);
+/******/ 			if (!module.children) module.children = [];
+/******/ 			Object.defineProperty(module, 'exports', {
+/******/ 				enumerable: true,
+/******/ 				set: () => {
+/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
+/******/ 				}
+/******/ 			});
+/******/ 			return module;
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	(() => {
+/******/ 		// define __esModule on exports
+/******/ 		__nccwpck_require__.r = (exports) => {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	})();
+/******/ 	
 /******/ 	/* webpack/runtime/compat */
 /******/ 	
 /******/ 	if (typeof __nccwpck_require__ !== 'undefined') __nccwpck_require__.ab = __dirname + "/";
@@ -2880,7 +3019,7 @@ var __webpack_exports__ = {};
 /**
  * The entrypoint for the action.
  */
-const { run } = __nccwpck_require__(713)
+const { run } = __nccwpck_require__(154)
 
 run()
 

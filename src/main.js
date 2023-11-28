@@ -1,4 +1,5 @@
 const core = require('@actions/core')
+import { parsePR } from './parse'
 
 /**
  * The main function for the action.
@@ -6,6 +7,9 @@ const core = require('@actions/core')
  */
 async function run() {
   try {
+    const pr_diff = await parsePR()
+    console.log('PR diff is: ', pr_diff)
+
     const files_to_ignore = core.getInput('files-to-ignore')
     core.setOutput('comments', files_to_ignore)
   } catch (error) {
