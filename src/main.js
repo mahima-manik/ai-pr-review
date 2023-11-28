@@ -1,5 +1,5 @@
 const core = require('@actions/core')
-import { parsePR } from './parse'
+const parsePR = require('./parse')
 
 /**
  * The main function for the action.

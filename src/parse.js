@@ -85,4 +85,4 @@ function parseDiff(diffString, files_to_ignore) {
   return changes
 }
 
-module.exports = { parsePR }
+export default parsePR
