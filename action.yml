@@ -2,7 +2,7 @@ name: 'AI PR review'
 description: 'AI PR review'
 author: 'mahima-manik'
 
-# Define your inputs here.
+# Expected inputs for the action
 inputs:
   openai-key:
     description: 'OpenAI API key'
@@ -15,10 +15,10 @@ inputs:
     required: false
     default: '**.md,dist/**,package-lock.json'
 
-# Define your outputs here.
+# Expected outputs from the action
 outputs:
   comments:
-  description: 'Comments made by AI on PR'
+    description: 'Comments made by AI on PR'
 
 runs:
   using: node20
