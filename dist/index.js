@@ -6785,10 +6785,17 @@ function wrappy (fn, cb) {
 /***/ }),
 
 /***/ 1713:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
-const core = __nccwpck_require__(2186)
-const parsePR = __nccwpck_require__(3248)
+"use strict";
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2186);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
+
+const { parsePR } = __nccwpck_require__(3248)
 
 /**
  * The main function for the action.
@@ -6799,31 +6806,29 @@ async function run() {
     const pr_diff = await parsePR()
     console.log('PR diff is: ', pr_diff)
 
-    const files_to_ignore = core.getInput('files-to-ignore')
-    core.setOutput('comments', files_to_ignore)
+    const files_to_ignore = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('files-to-ignore')
+    ;(0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput)('comments', files_to_ignore)
   } catch (error) {
     // Fail the workflow run if an error occurs
-    core.setFailed(error.message)
+    (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed)(error.message)
   }
 }
 
-module.exports = {
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   run
-}
+});
 
 
 /***/ }),
 
 /***/ 3248:
-/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
+/***/ ((module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
 __nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
-/* harmony export */ });
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5375);
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
+/* module decorator */ module = __nccwpck_require__.hmd(module);
 
 const core = __nccwpck_require__(2186)
 
@@ -6911,7 +6916,7 @@ function parseDiff(diffString, files_to_ignore) {
   return changes
 }
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (parsePR);
+module.exports = { parsePR }
 
 
 /***/ }),
@@ -7018,8 +7023,8 @@ module.exports = require("util");
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
+/******/ 			id: moduleId,
+/******/ 			loaded: false,
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -7031,6 +7036,9 @@ module.exports = require("util");
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
+/******/ 	
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -7058,6 +7066,21 @@ module.exports = require("util");
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/harmony module decorator */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.hmd = (module) => {
+/******/ 			module = Object.create(module);
+/******/ 			if (!module.children) module.children = [];
+/******/ 			Object.defineProperty(module, 'exports', {
+/******/ 				enumerable: true,
+/******/ 				set: () => {
+/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
+/******/ 				}
+/******/ 			});
+/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	

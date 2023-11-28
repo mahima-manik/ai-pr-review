@@ -1,5 +1,5 @@
-const core = require('@actions/core')
-const parsePR = require('./parse')
+import { getInput, setOutput, setFailed } from '@actions/core'
+const { parsePR } = require('./parse')
 
 /**
  * The main function for the action.
@@ -10,14 +10,14 @@ async function run() {
     const pr_diff = await parsePR()
     console.log('PR diff is: ', pr_diff)
 
-    const files_to_ignore = core.getInput('files-to-ignore')
-    core.setOutput('comments', files_to_ignore)
+    const files_to_ignore = getInput('files-to-ignore')
+    setOutput('comments', files_to_ignore)
   } catch (error) {
     // Fail the workflow run if an error occurs
-    core.setFailed(error.message)
+    setFailed(error.message)
   }
 }
 
-module.exports = {
+export default {
   run
 }
