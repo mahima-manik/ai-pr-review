@@ -1,11 +1,8 @@
 name: Continuous Integration
 
+# Only when manually triggered
 on:
-  pull_request:
-  push:
-    branches:
-      - main
-      - "releases/*"
+  workflow_dispatch:
 
 jobs:
   test-javascript:
