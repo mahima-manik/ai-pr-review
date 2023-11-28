@@ -1,18 +1,24 @@
-name: 'The name of your action here'
-description: 'Provide a description here'
-author: 'Your name or organization here'
+name: 'AI PR review'
+description: 'AI PR review'
+author: 'mahima-manik'
 
-# Define your inputs here.
+# Expected inputs for the action
 inputs:
-  milliseconds:
-    description: 'Your input description here'
+  openai-key:
+    description: 'OpenAI API key'
     required: true
-    default: '1000'
+  github-token:
+    description: 'Github token'
+    required: true
+  files-to-ignore:
+    description: 'Files to ignore'
+    required: false
+    default: '**.md,dist/**,package-lock.json'
 
-# Define your outputs here.
+# Expected outputs from the action
 outputs:
-  time:
-    description: 'Your output description here'
+  comments:
+    description: 'Comments made by AI on PR'
 
 runs:
   using: node20
