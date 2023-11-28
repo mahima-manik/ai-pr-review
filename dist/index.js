@@ -6793,6 +6793,8 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */   "run": () => (/* binding */ run)
 /* harmony export */ });
 const core = __nccwpck_require__(2186)
+const github = __nccwpck_require__(716)
+
 const { parsePR } = __nccwpck_require__(3248)
 
 /**
@@ -6801,10 +6803,13 @@ const { parsePR } = __nccwpck_require__(3248)
  */
 async function run() {
   try {
-    const pr_diff = await parsePR()
-    console.log('PR diff is: ', pr_diff)
-
     const files_to_ignore = core.getInput('files-to-ignore')
+
+    const pr_diff = await parsePR(
+      github.context.payload.pull_request,
+      files_to_ignore
+    )
+    console.log('PR diff is: ', pr_diff)
     core.setOutput('comments', files_to_ignore)
   } catch (error) {
     // Fail the workflow run if an error occurs
@@ -6911,6 +6916,14 @@ async function parsePR(pullRequest, files_to_ignore) {
     changes
   }
 }
+
+
+/***/ }),
+
+/***/ 716:
+/***/ ((module) => {
+
+module.exports = eval("require")("@actions/github");
 
 
 /***/ }),
