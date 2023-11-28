@@ -6792,9 +6792,7 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(2186);
-/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_0__);
-
+const core = __nccwpck_require__(2186)
 const { parsePR } = __nccwpck_require__(3248)
 
 /**
@@ -6806,11 +6804,11 @@ async function run() {
     const pr_diff = await parsePR()
     console.log('PR diff is: ', pr_diff)
 
-    const files_to_ignore = (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.getInput)('files-to-ignore')
-    ;(0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setOutput)('comments', files_to_ignore)
+    const files_to_ignore = core.getInput('files-to-ignore')
+    core.setOutput('comments', files_to_ignore)
   } catch (error) {
     // Fail the workflow run if an error occurs
-    (0,_actions_core__WEBPACK_IMPORTED_MODULE_0__.setFailed)(error.message)
+    core.setFailed(error.message)
   }
 }
 
