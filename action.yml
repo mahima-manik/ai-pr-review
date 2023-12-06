@@ -10,10 +10,6 @@ inputs:
   github-token:
     description: 'Github token'
     required: true
-  files-to-ignore:
-    description: 'Files to ignore'
-    required: false
-    default: '**.md,dist/**,package-lock.json'
 
 # Expected outputs from the action
 outputs:
