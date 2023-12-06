@@ -5,6 +5,31 @@ const octokit = new OctokitRest({
   auth: core.getInput('github-token')
 })
 
+async function get_ignore_list(owner, repo, file_path) {
+  try {
+    const response = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: file_path,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      mediaType: {
+        format: 'raw'
+      }
+    })
+
+    const content = response.data
+    const files_to_ignore = content
+      .split('\n')
+      .filter(line => !line.startsWith('#') && line !== '')
+    return files_to_ignore
+  } catch (error) {
+    console.log(error)
+    return []
+  }
+}
+
 async function getDiffString(owner, repo, pull_number) {
   console.log('Getting diff for: ', owner, repo, pull_number)
 
@@ -19,6 +44,14 @@ async function getDiffString(owner, repo, pull_number) {
   return response.data
 }
 
+function shouldIgnoreFile(filename, files_to_ignore) {
+  // Check if filename matches any pattern in files_to_ignore
+  return files_to_ignore.some(pattern => {
+    // Exact match for files or starts with match for directories
+    return filename === pattern || filename.startsWith(`${pattern}`)
+  })
+}
+
 function parseDiff(diffString, files_to_ignore) {
   const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
   let match
@@ -27,9 +60,8 @@ function parseDiff(diffString, files_to_ignore) {
   while ((match = fileDiffRegex.exec(diffString)) !== null) {
     const filename = match[1] // Extract filename directly from the regex match
 
-    // Ignore files in the ignore list
-    if (files_to_ignore.includes(filename)) {
-      console.log(`Ignoring ${filename}`)
+    if (shouldIgnoreFile(filename, files_to_ignore)) {
+      console.log(`Ignoring file: ${filename}`)
       continue
     }
 
@@ -71,12 +103,13 @@ function parseDiff(diffString, files_to_ignore) {
   return changes
 }
 
-export async function parsePR(pullRequest, files_to_ignore) {
+export async function parsePR(pullRequest) {
   const owner = pullRequest.base.repo.owner.login
   const repo = pullRequest.base.repo.name
   const pull_number = pullRequest.number
   const diffString = await getDiffString(owner, repo, pull_number)
-  const changes = parseDiff(diffString, files_to_ignore)
+  const ignore_list = await get_ignore_list(owner, repo, '.reviewignore')
+  const changes = parseDiff(diffString, ignore_list)
   console.log('Changes are: ', changes)
   return {
     title: pullRequest.title,
