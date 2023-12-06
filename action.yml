@@ -11,11 +11,6 @@ inputs:
     description: 'Github token'
     required: true
 
-# Expected outputs from the action
-outputs:
-  comments:
-    description: 'Comments made by AI on PR'
-
 runs:
   using: node20
   main: dist/index.js

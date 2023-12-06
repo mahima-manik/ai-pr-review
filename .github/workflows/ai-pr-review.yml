@@ -22,7 +22,3 @@ jobs:
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-key: ${{ secrets.OPENAI_KEY }}
-      
-      - name: Print output
-        run: |
-          echo "The output is ${{ steps.ai-peer-review.outputs.comments }}"
