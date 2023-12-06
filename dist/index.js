@@ -38985,12 +38985,7 @@ const { addCommentToPR } = __nccwpck_require__(4975)
  */
 async function run() {
   try {
-    const files_to_ignore = core.getInput('files-to-ignore')
-
-    const pr_diff = await parsePR(
-      github.context.payload.pull_request,
-      files_to_ignore
-    )
+    const pr_diff = await parsePR(github.context.payload.pull_request)
     console.log('PR diff is: ', pr_diff)
 
     const OPENAI_KEY = core.getInput('openai-key')
