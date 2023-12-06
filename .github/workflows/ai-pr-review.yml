@@ -18,6 +18,7 @@ jobs:
       
       - name: AI Peer review
         id: ai-peer-review
+        uses: ./
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           openai-key: ${{ secrets.OPENAI_KEY }}
