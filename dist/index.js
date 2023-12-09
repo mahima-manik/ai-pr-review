@@ -43050,8 +43050,8 @@ async function getMoreInfo(code_changes) {
     'You are a developer reviewing a Pull request.' +
     'The code change is a list of dictionary. ' +
     'Each dictionary has a key called filename which has changed, before_change, and after_change.' +
-    'Return a list of function names/class/constants that you need more information about to review the code.'
-  ;('Example: ["function_name", "class_name", "constant_name"]')
+    'Return only a list of function names/class/constants that you need more information about to review the code.' +
+    'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'
 
   const response = await reviewer_openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
@@ -43060,8 +43060,13 @@ async function getMoreInfo(code_changes) {
       { role: 'user', content: JSON.stringify(code_changes) }
     ]
   })
-  const more_info_list = JSON.parse(response.choices[0].message.content)
-  return more_info_list
+  try {
+    const more_info_list = JSON.parse(response.choices[0].message.content)
+    return more_info_list
+  } catch (error) {
+    console.log('Error parsing response from OpenAI: ', response, error)
+    return []
+  }
 }
 
 /**
