@@ -39031,7 +39031,6 @@ const { addCommentToPR } = __nccwpck_require__(4975)
 async function run() {
   try {
     const pr_diff = await parsePR(github.context.payload.pull_request)
-    console.log('PR diff is: ', pr_diff)
 
     const comments_list = await generateComments(pr_diff)
     console.log('PR comments are: ', comments_list)
@@ -39045,6 +39044,7 @@ async function run() {
     console.log('Response is: ', response)
   } catch (error) {
     // Fail the workflow run if an error occurs
+    console.error(error)
     core.setFailed(error.message)
   }
 }
@@ -43053,7 +43053,7 @@ async function getMoreInfo(code_changes) {
     'Return a list of function names/class/constants that you need more information about to review the code.'
   ;('Example: ["function_name", "class_name", "constant_name"]')
 
-  const response = await reviewer_openai.completions.create({
+  const response = await reviewer_openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: [
       { role: 'system', content: prompt },

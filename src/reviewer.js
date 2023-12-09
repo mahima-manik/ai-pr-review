@@ -18,7 +18,7 @@ async function getMoreInfo(code_changes) {
     'Return a list of function names/class/constants that you need more information about to review the code.'
   ;('Example: ["function_name", "class_name", "constant_name"]')
 
-  const response = await openai.completions.create({
+  const response = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: [
       { role: 'system', content: prompt },

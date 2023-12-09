@@ -12,7 +12,6 @@ const { addCommentToPR } = require('./comments')
 export async function run() {
   try {
     const pr_diff = await parsePR(github.context.payload.pull_request)
-    console.log('PR diff is: ', pr_diff)
 
     const comments_list = await generateComments(pr_diff)
     console.log('PR comments are: ', comments_list)
@@ -26,6 +25,7 @@ export async function run() {
     console.log('Response is: ', response)
   } catch (error) {
     // Fail the workflow run if an error occurs
+    console.error(error)
     core.setFailed(error.message)
   }
 }
