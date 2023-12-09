@@ -12,9 +12,9 @@ const openai = new OpenAI({
 
 async function getMoreInfo(code_changes) {
   const prompt =
-    ' You are reviewing a code change. ' +
+    'You are a developer reviewing a Pull request.' +
     'The code change is a list of dictionary. ' +
-    'Each dictionary has a key called filename which has changed, before_change, and after_change. ' +
+    'Each dictionary has a key called filename which has changed, before_change, and after_change.' +
     'Return a list of function names/class/constants that you need more information about to review the code.'
   ;('Example: ["function_name", "class_name", "constant_name"]')
 
@@ -37,15 +37,18 @@ async function getMoreInfo(code_changes) {
  */
 export async function generateComments(code_changes) {
   const system_prompt =
-    'You are reviewing a code change. ' +
-    'The code change is a list of dictionary. ' +
-    'Each dictionary has a key called filename which has changed, before_change, and after_change. ' +
-    'Review the changes and give PR comments as list of dictionary with the following format: ' +
-    '[{"path": "path/to/file", "position": line_number, "body": "change comment"}].' +
+    'Act as a developer and review PR changes. Code changes is given as list of dictionary. ' +
+    'Each dictionary filename, code snippet before and after change. ' +
+    'Some unchanged common lines are present in both before/after change. ' +
+    'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
+    'Extra files are provided for reference, but not to review. ' +
+    'Return review comments as following: ' +
+    '[{"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}].' +
     'If you have no comments, return an empty list. '
 
   const more_info_list = await getMoreInfo(code_changes)
 
+  console.log('More information is required on following: ', more_info_list)
   const file_paths_to_review = code_changes.map(change => change.filename)
 
   const extra_files_context = await getAllReferences(
@@ -55,20 +58,18 @@ export async function generateComments(code_changes) {
     file_paths_to_review
   )
 
+  const user_prompt = `Files to review: 
+    ${JSON.stringify(code_changes)} \n
+    Extra files for reference, but not to review:
+    ${JSON.stringify(extra_files_context)}`
+
+  console.log('User prompt is: ', user_prompt)
+
   const response = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo-16k',
-    // max_tokens: 4096,
     messages: [
       { role: 'system', content: system_prompt },
-      {
-        role: 'user',
-        content: `Files to review: ${JSON.stringify(code_changes)}`
-      },
-      {
-        role: 'user',
-        content: `Extra files for reference, but not to review: 
-        ${JSON.stringify(extra_files_context)}`
-      }
+      { role: 'user', content: user_prompt }
     ]
   })
 

@@ -87,7 +87,6 @@ export async function parsePR(pullRequest) {
   const diffString = await getDiffString(owner, repo, pull_number)
   const ignore_list = await get_ignore_list(owner, repo, '.reviewignore')
   const changes = parseDiff(diffString, ignore_list)
-  console.log('Changes are: ', changes)
   return {
     title: pullRequest.title,
     body: pullRequest.body,

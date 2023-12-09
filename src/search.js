@@ -54,7 +54,9 @@ export async function getAllReferences(
 ) {
   const results = []
   for (const query of list_of_queries) {
+    console.log('Searching for: ', query)
     const references = await searchCode(query)
+    console.log('References found in following file paths', references)
 
     const files_to_ignore = await get_ignore_list(owner, repo, '.reveiwignore')
 
@@ -66,6 +68,10 @@ export async function getAllReferences(
 
     for (const reference of filtered_references) {
       const content = await getFileContent(owner, repo, reference)
+      // Check if content already exists in results
+      const content_exists = results.some(result => result.content === content)
+      if (content_exists) continue
+
       results.push({
         path: reference,
         content
