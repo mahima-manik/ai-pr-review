@@ -1,0 +1,76 @@
+import { Octokit as OctokitRest } from '@octokit/rest'
+
+const { get_ignore_list } = require('./helper')
+const core = require('@actions/core')
+
+const octokit = new OctokitRest({
+  auth: core.getInput('github-token')
+})
+
+async function searchCode(query) {
+  try {
+    const response = await octokit.rest.search.code({
+      q: query,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      }
+    })
+    const results = response.data.items
+    // Return a list of path from the results
+    return results.map(result => result.path)
+  } catch (error) {
+    console.log(error)
+    return []
+  }
+}
+
+async function getFileContent(owner, repo, file_path) {
+  try {
+    const response = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: file_path,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      mediaType: {
+        format: 'raw'
+      }
+    })
+
+    const content = response.data
+    return content
+  } catch (error) {
+    console.log(error)
+    return ''
+  }
+}
+
+export async function getAllReferences(
+  owner,
+  repo,
+  list_of_queries,
+  file_paths_to_ignore
+) {
+  const results = []
+  for (const query of list_of_queries) {
+    const references = await searchCode(query)
+
+    const files_to_ignore = await get_ignore_list(owner, repo, '.reveiwignore')
+
+    const filtered_references = references.filter(
+      reference =>
+        !files_to_ignore.includes(reference) &&
+        !file_paths_to_ignore.includes(reference)
+    )
+
+    for (const reference of filtered_references) {
+      const content = await getFileContent(owner, repo, reference)
+      results.push({
+        path: reference,
+        content
+      })
+    }
+  }
+  return results
+}
