@@ -43089,7 +43089,9 @@ async function generateComments(code_changes) {
   const more_info_list = await getMoreInfo(code_changes)
 
   console.log('More information is required on following: ', more_info_list)
-  const file_paths_to_review = code_changes.map(change => change.filename)
+  console.log('Code changes are: ', code_changes)
+  const pr_file_changes = code_changes.changes
+  const file_paths_to_review = pr_file_changes.map(change => change.filename)
 
   const extra_files_context = await getAllReferences(
     github.context.payload.pull_request.base.repo.owner.login,
