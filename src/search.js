@@ -7,10 +7,10 @@ const octokit = new OctokitRest({
   auth: core.getInput('github-token')
 })
 
-async function searchCode(query) {
+async function searchCode(query, owner, repo) {
   try {
     const response = await octokit.rest.search.code({
-      q: query,
+      q: `${query} repo:${owner}/${repo}`,
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
       }
@@ -55,8 +55,8 @@ export async function getAllReferences(
   const results = []
   for (const query of list_of_queries) {
     console.log('Searching for: ', query)
-    const references = await searchCode(query)
-    console.log('References found in following file paths', references)
+    const references = await searchCode(query, owner, repo)
+    console.log(`References found for ${query}: `, references)
 
     const files_to_ignore = await get_ignore_list(owner, repo, '.reveiwignore')
 
