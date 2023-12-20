@@ -56,6 +56,10 @@ export async function getAllReferences(
   for (const query of list_of_queries) {
     console.log('Searching for: ', query)
     const references = await searchCode(query, owner, repo)
+    if (references.length === 0) {
+      console.log(`No references found for ${query}`)
+      continue
+    }
     console.log(`References found for ${query}: `, references)
 
     const files_to_ignore = await get_ignore_list(owner, repo, '.reveiwignore')
@@ -67,6 +71,7 @@ export async function getAllReferences(
     )
 
     for (const reference of filtered_references) {
+      console.log('Getting content for: ', reference)
       const content = await getFileContent(owner, repo, reference)
       // Check if content already exists in results
       const content_exists = results.some(result => result.content === content)

@@ -16,6 +16,7 @@ async function getMoreInfo(code_changes) {
     'The code change is a list of dictionary. ' +
     'Each dictionary has a key called filename which has changed, before_change, and after_change.' +
     'Return only a list of function names/class/constants that you need more information about to review the code.' +
+    'ONLY include names in project files, not in inbuild/external libraries' +
     'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'
 
   const response = await openai.chat.completions.create({
@@ -41,20 +42,8 @@ async function getMoreInfo(code_changes) {
  * @returns {Promise<object[]>} The list of comments to add to the PR.
  */
 export async function generateComments(code_changes) {
-  const system_prompt =
-    'Act as a developer and review PR changes. Code changes is given as list of dictionary. ' +
-    'Each dictionary filename, code snippet before and after change. ' +
-    'Some unchanged common lines are present in both before/after change. ' +
-    'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
-    'Extra files are provided for reference, but not to review. ' +
-    'Return review comments as following: ' +
-    '[{"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}].' +
-    'If you have no comments, return an empty list. '
-
   const more_info_list = await getMoreInfo(code_changes)
-
   console.log('More information is required on following: ', more_info_list)
-  console.log('Code changes are: ', code_changes)
   const pr_file_changes = code_changes.changes
   const file_paths_to_review = pr_file_changes.map(change => change.filename)
 
@@ -64,6 +53,16 @@ export async function generateComments(code_changes) {
     more_info_list,
     file_paths_to_review
   )
+
+  const system_prompt =
+    'Act as a developer and review PR changes. Code changes is given as list of dictionary. ' +
+    'Each dictionary filename, code snippet before and after change. ' +
+    'Some unchanged common lines are present in both before/after change. ' +
+    'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
+    'Extra files are provided for reference, but not to review. ' +
+    'Return review comments as following: ' +
+    '[{"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}].' +
+    'If you have no comments, return an empty list. '
 
   const user_prompt = `Files to review: 
     ${JSON.stringify(code_changes)} \n
