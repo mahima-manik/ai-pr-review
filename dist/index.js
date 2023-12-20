@@ -43095,7 +43095,7 @@ async function generateComments(code_changes) {
     'Some unchanged common lines are present in both before/after change. ' +
     'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
     'Extra files are provided for reference, but not to review. ' +
-    'Return review comments as following: ' +
+    'Return ONLY list of dictionary in format: ' +
     '[{"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}].' +
     'If you have no comments, return an empty list. '
 
@@ -43114,6 +43114,7 @@ async function generateComments(code_changes) {
     ]
   })
 
+  console.log(response)
   const comments_list = JSON.parse(response.choices[0].message.content)
   return comments_list
 }
