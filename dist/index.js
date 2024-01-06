@@ -38976,6 +38976,13 @@ const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
   auth: core.getInput('github-token')
 })
 
+/**
+ * Get the list of files to ignore from the .reviewignore file in the repository
+ * @param {*} owner
+ * @param {*} repo
+ * @param {*} file_path
+ * @returns {Promise<string[]>} Resolves to the list of files
+ */
 async function get_ignore_list(owner, repo, file_path) {
   try {
     const response = await octokit.rest.repos.getContent({
@@ -43185,12 +43192,19 @@ async function getAllReferences(
     repo,
     '.reveiwignore'
   )
-
-  const files_to_search = all_file_paths.filter(
-    file_path =>
-      !shouldIgnoreFile(file_path, files_paths_to_ignore) &&
-      !file_paths_to_review.includes(file_path)
-  )
+  console.log('Files to ignore: ', files_paths_to_ignore)
+  console.log('Files to review: ', file_paths_to_review)
+  const files_to_search = []
+  for (const file in all_file_paths) {
+    if (shouldIgnoreFile(file, files_paths_to_ignore)) {
+      console.log(`Ignoring file: ${file} because it is in the ignore list`)
+      continue
+    }
+    if (file_paths_to_review.includes(file)) {
+      console.log(`File ${file} is in the list of files to review`)
+    }
+    files_to_search.push(file)
+  }
 
   console.log('Files to search all queries inside: ', files_to_search)
 
@@ -43210,6 +43224,8 @@ async function getAllReferences(
           path: file_path,
           content: file_content
         })
+      } else {
+        console.log('No reference found for: ', query, ' in ', file_path)
       }
     }
   }

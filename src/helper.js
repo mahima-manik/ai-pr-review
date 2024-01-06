@@ -5,6 +5,13 @@ const octokit = new OctokitRest({
   auth: core.getInput('github-token')
 })
 
+/**
+ * Get the list of files to ignore from the .reviewignore file in the repository
+ * @param {*} owner
+ * @param {*} repo
+ * @param {*} file_path
+ * @returns {Promise<string[]>} Resolves to the list of files
+ */
 export async function get_ignore_list(owner, repo, file_path) {
   try {
     const response = await octokit.rest.repos.getContent({
