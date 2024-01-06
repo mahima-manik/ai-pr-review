@@ -29,3 +29,11 @@ export async function get_ignore_list(owner, repo, file_path) {
     return []
   }
 }
+
+export function shouldIgnoreFile(filename, files_to_ignore) {
+  // Check if filename matches any pattern in files_to_ignore
+  return files_to_ignore.some(pattern => {
+    // Exact match for files or starts with match for directories
+    return filename === pattern || filename.startsWith(`${pattern}`)
+  })
+}

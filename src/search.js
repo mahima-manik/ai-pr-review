@@ -1,6 +1,6 @@
 import { Octokit as OctokitRest } from '@octokit/rest'
 
-const { get_ignore_list } = require('./helper')
+const { get_ignore_list, shouldIgnoreFile } = require('./helper')
 const core = require('@actions/core')
 
 const octokit = new OctokitRest({
@@ -59,9 +59,11 @@ export async function getAllReferences(
 
   const files_to_search = all_file_paths.filter(
     file_path =>
-      !files_paths_to_ignore.includes(file_path) &&
+      !shouldIgnoreFile(file_path, files_paths_to_ignore) &&
       !file_paths_to_review.includes(file_path)
   )
+
+  console.log('Files to search all queries inside: ', files_to_search)
 
   const results = []
   for (const query of list_of_queries) {

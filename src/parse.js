@@ -1,6 +1,6 @@
 import { Octokit as OctokitRest } from '@octokit/rest'
 
-const { get_ignore_list } = require('./helper')
+const { get_ignore_list, shouldIgnoreFile } = require('./helper')
 const core = require('@actions/core')
 
 const octokit = new OctokitRest({
@@ -19,14 +19,6 @@ async function getDiffString(owner, repo, pull_number) {
     }
   })
   return response.data
-}
-
-function shouldIgnoreFile(filename, files_to_ignore) {
-  // Check if filename matches any pattern in files_to_ignore
-  return files_to_ignore.some(pattern => {
-    // Exact match for files or starts with match for directories
-    return filename === pattern || filename.startsWith(`${pattern}`)
-  })
 }
 
 function parseDiff(diffString, files_to_ignore) {

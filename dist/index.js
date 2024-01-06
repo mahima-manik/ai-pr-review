@@ -38964,7 +38964,8 @@ async function addCommentToPR(owner, repo, pr_number, list_of_comments) {
 "use strict";
 __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "get_ignore_list": () => (/* binding */ get_ignore_list)
+/* harmony export */   "get_ignore_list": () => (/* binding */ get_ignore_list),
+/* harmony export */   "shouldIgnoreFile": () => (/* binding */ shouldIgnoreFile)
 /* harmony export */ });
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5375);
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
@@ -38998,6 +38999,14 @@ async function get_ignore_list(owner, repo, file_path) {
     console.log(error)
     return []
   }
+}
+
+function shouldIgnoreFile(filename, files_to_ignore) {
+  // Check if filename matches any pattern in files_to_ignore
+  return files_to_ignore.some(pattern => {
+    // Exact match for files or starts with match for directories
+    return filename === pattern || filename.startsWith(`${pattern}`)
+  })
 }
 
 
@@ -39058,7 +39067,7 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
 
 
-const { get_ignore_list } = __nccwpck_require__(6989)
+const { get_ignore_list, shouldIgnoreFile } = __nccwpck_require__(6989)
 const core = __nccwpck_require__(2186)
 
 const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
@@ -39077,14 +39086,6 @@ async function getDiffString(owner, repo, pull_number) {
     }
   })
   return response.data
-}
-
-function shouldIgnoreFile(filename, files_to_ignore) {
-  // Check if filename matches any pattern in files_to_ignore
-  return files_to_ignore.some(pattern => {
-    // Exact match for files or starts with match for directories
-    return filename === pattern || filename.startsWith(`${pattern}`)
-  })
 }
 
 function parseDiff(diffString, files_to_ignore) {
@@ -43128,7 +43129,7 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
 
 
-const { get_ignore_list } = __nccwpck_require__(6989)
+const { get_ignore_list, shouldIgnoreFile } = __nccwpck_require__(6989)
 const core = __nccwpck_require__(2186)
 
 const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
@@ -43187,9 +43188,11 @@ async function getAllReferences(
 
   const files_to_search = all_file_paths.filter(
     file_path =>
-      !files_paths_to_ignore.includes(file_path) &&
+      !shouldIgnoreFile(file_path, files_paths_to_ignore) &&
       !file_paths_to_review.includes(file_path)
   )
+
+  console.log('Files to search all queries inside: ', files_to_search)
 
   const results = []
   for (const query of list_of_queries) {
