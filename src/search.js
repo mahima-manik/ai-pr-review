@@ -1,33 +1,15 @@
 import { Octokit as OctokitRest } from '@octokit/rest'
 
-const { get_ignore_list, shouldIgnoreFile } = require('./helper')
+const {
+  get_ignore_list,
+  shouldIgnoreFile,
+  getFileContent
+} = require('./helper')
 const core = require('@actions/core')
 
 const octokit = new OctokitRest({
   auth: core.getInput('github-token')
 })
-
-async function getFileContent(owner, repo, file_path) {
-  try {
-    const response = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: file_path,
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
-      },
-      mediaType: {
-        format: 'raw'
-      }
-    })
-
-    const content = response.data
-    return content
-  } catch (error) {
-    console.log(error)
-    return ''
-  }
-}
 
 async function getAllFilePathsInRepo(owner, repo) {
   const tree = await octokit.rest.git.getTree({
@@ -51,6 +33,7 @@ export async function getAllReferences(
   file_paths_to_review
 ) {
   const all_file_paths = await getAllFilePathsInRepo(owner, repo)
+  console.log('All file paths are: ', all_file_paths)
   const files_paths_to_ignore = await get_ignore_list(
     owner,
     repo,

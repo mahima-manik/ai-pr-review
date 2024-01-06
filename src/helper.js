@@ -5,14 +5,7 @@ const octokit = new OctokitRest({
   auth: core.getInput('github-token')
 })
 
-/**
- * Get the list of files to ignore from the .reviewignore file in the repository
- * @param {*} owner
- * @param {*} repo
- * @param {*} file_path
- * @returns {Promise<string[]>} Resolves to the list of files
- */
-export async function get_ignore_list(owner, repo, file_path) {
+export async function getFileContent(owner, repo, file_path) {
   try {
     const response = await octokit.rest.repos.getContent({
       owner,
@@ -27,14 +20,26 @@ export async function get_ignore_list(owner, repo, file_path) {
     })
 
     const content = response.data
-    const files_to_ignore = content
-      .split('\n')
-      .filter(line => !line.startsWith('#') && line !== '')
-    return files_to_ignore
+    return content
   } catch (error) {
     console.log(error)
-    return []
+    return ''
   }
+}
+
+/**
+ * Get the list of files to ignore from the .reviewignore file in the repository
+ * @param {*} owner
+ * @param {*} repo
+ * @param {*} file_path
+ * @returns {Promise<string[]>} Resolves to the list of files
+ */
+export async function get_ignore_list(owner, repo, file_path) {
+  const content = getFileContent(owner, repo, file_path)
+  const files_to_ignore = content
+    .split('\n')
+    .filter(line => !line.startsWith('#') && line !== '')
+  return files_to_ignore
 }
 
 export function shouldIgnoreFile(filename, files_to_ignore) {

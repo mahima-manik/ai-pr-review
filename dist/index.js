@@ -38964,6 +38964,7 @@ async function addCommentToPR(owner, repo, pr_number, list_of_comments) {
 "use strict";
 __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "getFileContent": () => (/* binding */ getFileContent),
 /* harmony export */   "get_ignore_list": () => (/* binding */ get_ignore_list),
 /* harmony export */   "shouldIgnoreFile": () => (/* binding */ shouldIgnoreFile)
 /* harmony export */ });
@@ -38976,14 +38977,7 @@ const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
   auth: core.getInput('github-token')
 })
 
-/**
- * Get the list of files to ignore from the .reviewignore file in the repository
- * @param {*} owner
- * @param {*} repo
- * @param {*} file_path
- * @returns {Promise<string[]>} Resolves to the list of files
- */
-async function get_ignore_list(owner, repo, file_path) {
+async function getFileContent(owner, repo, file_path) {
   try {
     const response = await octokit.rest.repos.getContent({
       owner,
@@ -38998,14 +38992,26 @@ async function get_ignore_list(owner, repo, file_path) {
     })
 
     const content = response.data
-    const files_to_ignore = content
-      .split('\n')
-      .filter(line => !line.startsWith('#') && line !== '')
-    return files_to_ignore
+    return content
   } catch (error) {
     console.log(error)
-    return []
+    return ''
   }
+}
+
+/**
+ * Get the list of files to ignore from the .reviewignore file in the repository
+ * @param {*} owner
+ * @param {*} repo
+ * @param {*} file_path
+ * @returns {Promise<string[]>} Resolves to the list of files
+ */
+async function get_ignore_list(owner, repo, file_path) {
+  const content = getFileContent(owner, repo, file_path)
+  const files_to_ignore = content
+    .split('\n')
+    .filter(line => !line.startsWith('#') && line !== '')
+  return files_to_ignore
 }
 
 function shouldIgnoreFile(filename, files_to_ignore) {
@@ -39045,13 +39051,13 @@ async function run() {
     const comments_list = await generateComments(pr_diff)
     console.log('PR comments are: ', comments_list)
 
-    const response = await addCommentToPR(
-      github.context.payload.pull_request.base.repo.owner.login,
-      github.context.payload.pull_request.base.repo.name,
-      github.context.payload.pull_request.number,
-      comments_list
-    )
-    console.log('Response is: ', response)
+    // const response = await addCommentToPR(
+    //   github.context.payload.pull_request.base.repo.owner.login,
+    //   github.context.payload.pull_request.base.repo.name,
+    //   github.context.payload.pull_request.number,
+    //   comments_list
+    // )
+    // console.log('Response is: ', response)
   } catch (error) {
     // Fail the workflow run if an error occurs
     console.error(error)
@@ -43136,34 +43142,16 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
 
 
-const { get_ignore_list, shouldIgnoreFile } = __nccwpck_require__(6989)
+const {
+  get_ignore_list,
+  shouldIgnoreFile,
+  getFileContent
+} = __nccwpck_require__(6989)
 const core = __nccwpck_require__(2186)
 
 const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
   auth: core.getInput('github-token')
 })
-
-async function getFileContent(owner, repo, file_path) {
-  try {
-    const response = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: file_path,
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
-      },
-      mediaType: {
-        format: 'raw'
-      }
-    })
-
-    const content = response.data
-    return content
-  } catch (error) {
-    console.log(error)
-    return ''
-  }
-}
 
 async function getAllFilePathsInRepo(owner, repo) {
   const tree = await octokit.rest.git.getTree({
@@ -43187,6 +43175,7 @@ async function getAllReferences(
   file_paths_to_review
 ) {
   const all_file_paths = await getAllFilePathsInRepo(owner, repo)
+  console.log('All file paths are: ', all_file_paths)
   const files_paths_to_ignore = await get_ignore_list(
     owner,
     repo,
