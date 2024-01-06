@@ -39008,6 +39008,7 @@ async function getFileContent(owner, repo, file_path) {
  */
 async function get_ignore_list(owner, repo, file_path) {
   const content = await getFileContent(owner, repo, file_path)
+  console.log('Content of .reviewignore is: ', content)
   const files_to_ignore = content
     .split('\n')
     .filter(line => !line.startsWith('#') && line !== '')
@@ -43184,7 +43185,7 @@ async function getAllReferences(
   console.log('Files to ignore: ', files_paths_to_ignore)
   console.log('Files to review: ', file_paths_to_review)
   const files_to_search = []
-  for (const file in all_file_paths) {
+  for (const file of all_file_paths) {
     if (shouldIgnoreFile(file, files_paths_to_ignore)) {
       console.log(`Ignoring file: ${file} because it is in the ignore list`)
       continue

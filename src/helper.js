@@ -36,6 +36,7 @@ export async function getFileContent(owner, repo, file_path) {
  */
 export async function get_ignore_list(owner, repo, file_path) {
   const content = await getFileContent(owner, repo, file_path)
+  console.log('Content of .reviewignore is: ', content)
   const files_to_ignore = content
     .split('\n')
     .filter(line => !line.startsWith('#') && line !== '')
