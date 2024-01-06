@@ -35,7 +35,7 @@ export async function getFileContent(owner, repo, file_path) {
  * @returns {Promise<string[]>} Resolves to the list of files
  */
 export async function get_ignore_list(owner, repo, file_path) {
-  const content = getFileContent(owner, repo, file_path)
+  const content = await getFileContent(owner, repo, file_path)
   const files_to_ignore = content
     .split('\n')
     .filter(line => !line.startsWith('#') && line !== '')
