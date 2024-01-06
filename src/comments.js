@@ -26,12 +26,6 @@ export async function addCommentToPR(owner, repo, pr_number, list_of_comments) {
 
   console.log('Response from adding comment: ', response)
 
-  // Check that the comment was added successfully
-  if (response.status === 201) {
-    console.log('Successfully added comment to PR')
-    return true
-  } else {
-    console.log('Failed to add comment to PR')
-    return false
-  }
+  // Return true if comment was added successfully
+  return response.status === 200
 }

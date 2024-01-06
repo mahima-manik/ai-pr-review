@@ -38951,14 +38951,8 @@ async function addCommentToPR(owner, repo, pr_number, list_of_comments) {
 
   console.log('Response from adding comment: ', response)
 
-  // Check that the comment was added successfully
-  if (response.status === 201) {
-    console.log('Successfully added comment to PR')
-    return true
-  } else {
-    console.log('Failed to add comment to PR')
-    return false
-  }
+  // Return true if comment was added successfully
+  return response.status === 200
 }
 
 
@@ -43141,23 +43135,6 @@ const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
   auth: core.getInput('github-token')
 })
 
-async function searchCode(query, owner, repo) {
-  try {
-    const response = await octokit.rest.search.code({
-      q: `${query} repo:${owner}/${repo}`,
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
-      }
-    })
-    const results = response.data.items
-    // Return a list of path from the results
-    return results.map(result => result.path)
-  } catch (error) {
-    console.log(error)
-    return []
-  }
-}
-
 async function getFileContent(owner, repo, file_path) {
   try {
     const response = await octokit.rest.repos.getContent({
@@ -43180,41 +43157,57 @@ async function getFileContent(owner, repo, file_path) {
   }
 }
 
+async function getAllFilePathsInRepo(owner, repo) {
+  const tree = await octokit.rest.git.getTree({
+    owner,
+    repo,
+    tree_sha: 'HEAD',
+    recursive: 'true',
+    headers: {
+      'X-GitHub-Api-Version': '2022-11-28'
+    }
+  })
+  return tree.data.tree
+    .filter(file => file.type === 'blob')
+    .map(file => file.path)
+}
+
 async function getAllReferences(
   owner,
   repo,
   list_of_queries,
-  file_paths_to_ignore
+  file_paths_to_review
 ) {
+  const all_file_paths = await getAllFilePathsInRepo(owner, repo)
+  const files_paths_to_ignore = await get_ignore_list(
+    owner,
+    repo,
+    '.reveiwignore'
+  )
+
+  const files_to_search = all_file_paths.filter(
+    file_path =>
+      !files_paths_to_ignore.includes(file_path) &&
+      !file_paths_to_review.includes(file_path)
+  )
+
   const results = []
   for (const query of list_of_queries) {
     console.log('Searching for: ', query)
-    const references = await searchCode(query, owner, repo)
-    if (references.length === 0) {
-      console.log(`No references found for ${query}`)
-      continue
-    }
-    console.log(`References found for ${query}: `, references)
 
-    const files_to_ignore = await get_ignore_list(owner, repo, '.reveiwignore')
+    for (const file_path of files_to_search) {
+      // If file_path already exists in results, skip
+      const file_path_exists = results.some(result => result.path === file_path)
+      if (file_path_exists) continue
 
-    const filtered_references = references.filter(
-      reference =>
-        !files_to_ignore.includes(reference) &&
-        !file_paths_to_ignore.includes(reference)
-    )
-
-    for (const reference of filtered_references) {
-      console.log('Getting content for: ', reference)
-      const content = await getFileContent(owner, repo, reference)
-      // Check if content already exists in results
-      const content_exists = results.some(result => result.content === content)
-      if (content_exists) continue
-
-      results.push({
-        path: reference,
-        content
-      })
+      const file_content = await getFileContent(owner, repo, file_path)
+      if (file_content.includes(query)) {
+        console.log('Found reference for: ', query, ' in ', file_path)
+        results.push({
+          path: file_path,
+          content: file_content
+        })
+      }
     }
   }
   return results
