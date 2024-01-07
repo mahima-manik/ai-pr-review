@@ -43201,6 +43201,7 @@ async function getAllReferences(
     }
     if (file_paths_to_review.includes(file)) {
       console.log(`File ${file} is in the list of files to review`)
+      continue
     }
     files_to_search.push(file)
   }
