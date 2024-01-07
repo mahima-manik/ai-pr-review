@@ -30,20 +30,16 @@ export async function getAllReferences(
   owner,
   repo,
   list_of_queries,
-  file_paths_to_review
+  file_paths_to_review,
+  file_paths_to_ignore
 ) {
   const all_file_paths = await getAllFilePathsInRepo(owner, repo)
   console.log('All file paths are: ', all_file_paths)
-  const files_paths_to_ignore = await get_ignore_list(
-    owner,
-    repo,
-    '.reveiwignore'
-  )
-  console.log('Files to ignore: ', files_paths_to_ignore)
+  console.log('Files to ignore: ', file_paths_to_ignore)
   console.log('Files to review: ', file_paths_to_review)
   const files_to_search = []
   for (const file of all_file_paths) {
-    if (shouldIgnoreFile(file, files_paths_to_ignore)) {
+    if (shouldIgnoreFile(file, file_paths_to_ignore)) {
       console.log(`Ignoring file: ${file} because it is in the ignore list`)
       continue
     }

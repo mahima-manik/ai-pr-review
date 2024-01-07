@@ -41,7 +41,7 @@ async function getMoreInfo(code_changes) {
  * @param {string} openai_key The OpenAI API key.
  * @returns {Promise<object[]>} The list of comments to add to the PR.
  */
-export async function generateComments(code_changes) {
+export async function generateComments(code_changes, file_paths_to_ignore) {
   const more_info_list = await getMoreInfo(code_changes)
   console.log('More information is required on following: ', more_info_list)
   const pr_file_changes = code_changes.changes
@@ -51,7 +51,8 @@ export async function generateComments(code_changes) {
     github.context.payload.pull_request.base.repo.owner.login,
     github.context.payload.pull_request.base.repo.name,
     more_info_list,
-    file_paths_to_review
+    file_paths_to_review,
+    file_paths_to_ignore
   )
 
   const system_prompt =

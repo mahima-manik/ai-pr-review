@@ -1,6 +1,6 @@
 import { Octokit as OctokitRest } from '@octokit/rest'
 
-const { get_ignore_list, shouldIgnoreFile } = require('./helper')
+const { shouldIgnoreFile } = require('./helper')
 const core = require('@actions/core')
 
 const octokit = new OctokitRest({
@@ -72,13 +72,12 @@ function parseDiff(diffString, files_to_ignore) {
   return changes
 }
 
-export async function parsePR(pullRequest) {
+export async function parsePR(pullRequest, file_paths_to_ignore) {
   const owner = pullRequest.base.repo.owner.login
   const repo = pullRequest.base.repo.name
   const pull_number = pullRequest.number
   const diffString = await getDiffString(owner, repo, pull_number)
-  const ignore_list = await get_ignore_list(owner, repo, '.reviewignore')
-  const changes = parseDiff(diffString, ignore_list)
+  const changes = parseDiff(diffString, file_paths_to_ignore)
   return {
     title: pullRequest.title,
     body: pullRequest.body,

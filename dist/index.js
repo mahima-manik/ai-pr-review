@@ -39034,6 +39034,9 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
 /* harmony export */   "run": () => (/* binding */ run)
 /* harmony export */ });
+/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(6989);
+
+
 const core = __nccwpck_require__(2186)
 const github = __nccwpck_require__(5438)
 
@@ -39047,9 +39050,19 @@ const { addCommentToPR } = __nccwpck_require__(4975)
  */
 async function run() {
   try {
-    const pr_diff = await parsePR(github.context.payload.pull_request)
+    const owner = github.context.payload.pull_request.base.repo.owner.login
+    const repo = github.context.payload.pull_request.base.repo.name
+    const file_paths_to_ignore = await (0,_helper__WEBPACK_IMPORTED_MODULE_0__.get_ignore_list)(
+      owner,
+      repo,
+      '.reviewignore'
+    )
+    const pr_diff = await parsePR(
+      github.context.payload.pull_request,
+      file_paths_to_ignore
+    )
 
-    const comments_list = await generateComments(pr_diff)
+    const comments_list = await generateComments(pr_diff, file_paths_to_ignore)
     console.log('PR comments are: ', comments_list)
 
     // const response = await addCommentToPR(
@@ -39081,7 +39094,7 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
 
 
-const { get_ignore_list, shouldIgnoreFile } = __nccwpck_require__(6989)
+const { shouldIgnoreFile } = __nccwpck_require__(6989)
 const core = __nccwpck_require__(2186)
 
 const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
@@ -39153,13 +39166,12 @@ function parseDiff(diffString, files_to_ignore) {
   return changes
 }
 
-async function parsePR(pullRequest) {
+async function parsePR(pullRequest, file_paths_to_ignore) {
   const owner = pullRequest.base.repo.owner.login
   const repo = pullRequest.base.repo.name
   const pull_number = pullRequest.number
   const diffString = await getDiffString(owner, repo, pull_number)
-  const ignore_list = await get_ignore_list(owner, repo, '.reviewignore')
-  const changes = parseDiff(diffString, ignore_list)
+  const changes = parseDiff(diffString, file_paths_to_ignore)
   return {
     title: pullRequest.title,
     body: pullRequest.body,
@@ -43085,7 +43097,7 @@ async function getMoreInfo(code_changes) {
  * @param {string} openai_key The OpenAI API key.
  * @returns {Promise<object[]>} The list of comments to add to the PR.
  */
-async function generateComments(code_changes) {
+async function generateComments(code_changes, file_paths_to_ignore) {
   const more_info_list = await getMoreInfo(code_changes)
   console.log('More information is required on following: ', more_info_list)
   const pr_file_changes = code_changes.changes
@@ -43095,7 +43107,8 @@ async function generateComments(code_changes) {
     github.context.payload.pull_request.base.repo.owner.login,
     github.context.payload.pull_request.base.repo.name,
     more_info_list,
-    file_paths_to_review
+    file_paths_to_review,
+    file_paths_to_ignore
   )
 
   const system_prompt =
@@ -43173,20 +43186,16 @@ async function getAllReferences(
   owner,
   repo,
   list_of_queries,
-  file_paths_to_review
+  file_paths_to_review,
+  file_paths_to_ignore
 ) {
   const all_file_paths = await getAllFilePathsInRepo(owner, repo)
   console.log('All file paths are: ', all_file_paths)
-  const files_paths_to_ignore = await get_ignore_list(
-    owner,
-    repo,
-    '.reveiwignore'
-  )
-  console.log('Files to ignore: ', files_paths_to_ignore)
+  console.log('Files to ignore: ', file_paths_to_ignore)
   console.log('Files to review: ', file_paths_to_review)
   const files_to_search = []
   for (const file of all_file_paths) {
-    if (shouldIgnoreFile(file, files_paths_to_ignore)) {
+    if (shouldIgnoreFile(file, file_paths_to_ignore)) {
       console.log(`Ignoring file: ${file} because it is in the ignore list`)
       continue
     }
