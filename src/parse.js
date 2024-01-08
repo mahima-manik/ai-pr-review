@@ -1,34 +1,11 @@
 import { Octokit as OctokitRest } from '@octokit/rest'
+
+const { shouldIgnoreFile } = require('./helper')
 const core = require('@actions/core')
 
 const octokit = new OctokitRest({
   auth: core.getInput('github-token')
 })
-
-async function get_ignore_list(owner, repo, file_path) {
-  try {
-    const response = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: file_path,
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
-      },
-      mediaType: {
-        format: 'raw'
-      }
-    })
-
-    const content = response.data
-    const files_to_ignore = content
-      .split('\n')
-      .filter(line => !line.startsWith('#') && line !== '')
-    return files_to_ignore
-  } catch (error) {
-    console.log(error)
-    return []
-  }
-}
 
 async function getDiffString(owner, repo, pull_number) {
   console.log('Getting diff for: ', owner, repo, pull_number)
@@ -42,14 +19,6 @@ async function getDiffString(owner, repo, pull_number) {
     }
   })
   return response.data
-}
-
-function shouldIgnoreFile(filename, files_to_ignore) {
-  // Check if filename matches any pattern in files_to_ignore
-  return files_to_ignore.some(pattern => {
-    // Exact match for files or starts with match for directories
-    return filename === pattern || filename.startsWith(`${pattern}`)
-  })
 }
 
 function parseDiff(diffString, files_to_ignore) {
@@ -103,14 +72,12 @@ function parseDiff(diffString, files_to_ignore) {
   return changes
 }
 
-export async function parsePR(pullRequest) {
+export async function parsePR(pullRequest, file_paths_to_ignore) {
   const owner = pullRequest.base.repo.owner.login
   const repo = pullRequest.base.repo.name
   const pull_number = pullRequest.number
   const diffString = await getDiffString(owner, repo, pull_number)
-  const ignore_list = await get_ignore_list(owner, repo, '.reviewignore')
-  const changes = parseDiff(diffString, ignore_list)
-  console.log('Changes are: ', changes)
+  const changes = parseDiff(diffString, file_paths_to_ignore)
   return {
     title: pullRequest.title,
     body: pullRequest.body,

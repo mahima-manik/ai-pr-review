@@ -4,3 +4,5 @@ node_modules/
 coverage/
 
 package-lock.json
+
+README.md

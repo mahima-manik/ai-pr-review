@@ -38951,14 +38951,76 @@ async function addCommentToPR(owner, repo, pr_number, list_of_comments) {
 
   console.log('Response from adding comment: ', response)
 
-  // Check that the comment was added successfully
-  if (response.status === 201) {
-    console.log('Successfully added comment to PR')
-    return true
-  } else {
-    console.log('Failed to add comment to PR')
-    return false
+  // Return true if comment was added successfully
+  return response.status === 200
+}
+
+
+/***/ }),
+
+/***/ 6989:
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
+
+"use strict";
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "getFileContent": () => (/* binding */ getFileContent),
+/* harmony export */   "get_ignore_list": () => (/* binding */ get_ignore_list),
+/* harmony export */   "shouldIgnoreFile": () => (/* binding */ shouldIgnoreFile)
+/* harmony export */ });
+/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5375);
+/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
+
+const core = __nccwpck_require__(2186)
+
+const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
+  auth: core.getInput('github-token')
+})
+
+async function getFileContent(owner, repo, file_path) {
+  try {
+    const response = await octokit.rest.repos.getContent({
+      owner,
+      repo,
+      path: file_path,
+      headers: {
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      mediaType: {
+        format: 'raw'
+      }
+    })
+
+    const content = response.data
+    return content
+  } catch (error) {
+    console.log(error)
+    return ''
   }
+}
+
+/**
+ * Get the list of files to ignore from the .reviewignore file in the repository
+ * @param {*} owner
+ * @param {*} repo
+ * @param {*} file_path
+ * @returns {Promise<string[]>} Resolves to the list of files
+ */
+async function get_ignore_list(owner, repo, file_path) {
+  const content = await getFileContent(owner, repo, file_path)
+  console.log('Content of .reviewignore is: ', content)
+  const files_to_ignore = content
+    .split('\n')
+    .filter(line => !line.startsWith('#') && line !== '')
+  return files_to_ignore
+}
+
+function shouldIgnoreFile(filename, files_to_ignore) {
+  // Check if filename matches any pattern in files_to_ignore
+  return files_to_ignore.some(pattern => {
+    // Exact match for files or starts with match for directories
+    return filename === pattern || filename.startsWith(`${pattern}`)
+  })
 }
 
 
@@ -38972,6 +39034,9 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
 /* harmony export */   "run": () => (/* binding */ run)
 /* harmony export */ });
+/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(6989);
+
+
 const core = __nccwpck_require__(2186)
 const github = __nccwpck_require__(5438)
 
@@ -38979,18 +39044,25 @@ const { parsePR } = __nccwpck_require__(3248)
 const { generateComments } = __nccwpck_require__(9612)
 const { addCommentToPR } = __nccwpck_require__(4975)
 
-const OPENAI_KEY = core.getInput('openai-key')
-
 /**
  * The main function for the action.
  * @returns {Promise<void>} Resolves when the action is complete.
  */
 async function run() {
   try {
-    const pr_diff = await parsePR(github.context.payload.pull_request)
-    console.log('PR diff is: ', pr_diff)
+    const owner = github.context.payload.pull_request.base.repo.owner.login
+    const repo = github.context.payload.pull_request.base.repo.name
+    const file_paths_to_ignore = await (0,_helper__WEBPACK_IMPORTED_MODULE_0__.get_ignore_list)(
+      owner,
+      repo,
+      '.reviewignore'
+    )
+    const pr_diff = await parsePR(
+      github.context.payload.pull_request,
+      file_paths_to_ignore
+    )
 
-    const comments_list = await generateComments(pr_diff, OPENAI_KEY)
+    const comments_list = await generateComments(pr_diff, file_paths_to_ignore)
     console.log('PR comments are: ', comments_list)
 
     const response = await addCommentToPR(
@@ -39002,6 +39074,7 @@ async function run() {
     console.log('Response is: ', response)
   } catch (error) {
     // Fail the workflow run if an error occurs
+    console.error(error)
     core.setFailed(error.message)
   }
 }
@@ -39020,36 +39093,13 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5375);
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
 
+
+const { shouldIgnoreFile } = __nccwpck_require__(6989)
 const core = __nccwpck_require__(2186)
 
 const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
   auth: core.getInput('github-token')
 })
-
-async function get_ignore_list(owner, repo, file_path) {
-  try {
-    const response = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: file_path,
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
-      },
-      mediaType: {
-        format: 'raw'
-      }
-    })
-
-    const content = response.data
-    const files_to_ignore = content
-      .split('\n')
-      .filter(line => !line.startsWith('#') && line !== '')
-    return files_to_ignore
-  } catch (error) {
-    console.log(error)
-    return []
-  }
-}
 
 async function getDiffString(owner, repo, pull_number) {
   console.log('Getting diff for: ', owner, repo, pull_number)
@@ -39063,14 +39113,6 @@ async function getDiffString(owner, repo, pull_number) {
     }
   })
   return response.data
-}
-
-function shouldIgnoreFile(filename, files_to_ignore) {
-  // Check if filename matches any pattern in files_to_ignore
-  return files_to_ignore.some(pattern => {
-    // Exact match for files or starts with match for directories
-    return filename === pattern || filename.startsWith(`${pattern}`)
-  })
 }
 
 function parseDiff(diffString, files_to_ignore) {
@@ -39124,14 +39166,12 @@ function parseDiff(diffString, files_to_ignore) {
   return changes
 }
 
-async function parsePR(pullRequest) {
+async function parsePR(pullRequest, file_paths_to_ignore) {
   const owner = pullRequest.base.repo.owner.login
   const repo = pullRequest.base.repo.name
   const pull_number = pullRequest.number
   const diffString = await getDiffString(owner, repo, pull_number)
-  const ignore_list = await get_ignore_list(owner, repo, '.reviewignore')
-  const changes = parseDiff(diffString, ignore_list)
-  console.log('Changes are: ', changes)
+  const changes = parseDiff(diffString, file_paths_to_ignore)
   return {
     title: pullRequest.title,
     body: pullRequest.body,
@@ -43011,10 +43051,45 @@ var openai_fileFromPath = fileFromPath;
     OpenAI.FineTunesPage = FineTunesPage;
     OpenAI.Beta = Beta;
 })(OpenAI || (OpenAI = {}));
-/* harmony default export */ const node_modules_openai = (OpenAI);
+/* harmony default export */ const openai = (OpenAI);
 //# sourceMappingURL=index.mjs.map
 ;// CONCATENATED MODULE: ./src/reviewer.js
 
+
+const github = __nccwpck_require__(5438)
+const core = __nccwpck_require__(2186)
+
+const { getAllReferences } = __nccwpck_require__(2506)
+
+const OPENAI_KEY = core.getInput('openai-key')
+const reviewer_openai = new openai({
+  apiKey: OPENAI_KEY
+})
+
+async function getMoreInfo(code_changes) {
+  const prompt =
+    'You are a developer reviewing a Pull request.' +
+    'The code change is a list of dictionary. ' +
+    'Each dictionary has a key called filename which has changed, before_change, and after_change.' +
+    'Return only a list of function names/class/constants that you need more information about to review the code.' +
+    'ONLY include names in project files, not in inbuild/external libraries' +
+    'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'
+
+  const response = await reviewer_openai.chat.completions.create({
+    model: 'gpt-3.5-turbo',
+    messages: [
+      { role: 'system', content: prompt },
+      { role: 'user', content: JSON.stringify(code_changes) }
+    ]
+  })
+  try {
+    const more_info_list = JSON.parse(response.choices[0].message.content)
+    return more_info_list
+  } catch (error) {
+    console.log('Error parsing response from OpenAI: ', response, error)
+    return []
+  }
+}
 
 /**
  * Generate comments for a code change.
@@ -43022,30 +43097,140 @@ var openai_fileFromPath = fileFromPath;
  * @param {string} openai_key The OpenAI API key.
  * @returns {Promise<object[]>} The list of comments to add to the PR.
  */
-async function generateComments(code_changes, openai_key) {
+async function generateComments(code_changes, file_paths_to_ignore) {
+  const more_info_list = await getMoreInfo(code_changes)
+  console.log('More information is required on following: ', more_info_list)
+  const pr_file_changes = code_changes.changes
+  const file_paths_to_review = pr_file_changes.map(change => change.filename)
+
+  const extra_files_context = await getAllReferences(
+    github.context.payload.pull_request.base.repo.owner.login,
+    github.context.payload.pull_request.base.repo.name,
+    more_info_list,
+    file_paths_to_review,
+    file_paths_to_ignore
+  )
+
   const system_prompt =
-    'You are reviewing a code change. ' +
-    'The code change is a list of dictionary. ' +
-    'Each dictionary has a key called filename which has changed, before_change, and after_change. ' +
-    'Review the changes and give PR comments as list of dictionary with the following format: ' +
-    '[{"path": "path/to/file", "position": line_number, "body": "change comment"}].' +
-    'If you have no comments, return an empty list. '
+    'Act as a developer and review PR changes. Code changes is given as list of dictionary. ' +
+    'Each dictionary has filename, code snippet before and after change. ' +
+    'Some unchanged common lines are present in both before/after change. ' +
+    'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
+    'Only provide the comments that you are confident about. ' +
+    'Extra files are provided for reference, but not to review. ' +
+    'Return ONLY a list of dictionary in format: ' +
+    '[{"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}].' +
+    'If you have no comments, return an empty list.'
 
-  const openai = new node_modules_openai({
-    apiKey: openai_key
-  })
+  const user_prompt = `Files to review: 
+    ${JSON.stringify(code_changes)} \n
+    Extra files for reference, but not to review:
+    ${JSON.stringify(extra_files_context)}`
 
-  const response = await openai.chat.completions.create({
+  console.log('User prompt is: ', user_prompt)
+
+  const response = await reviewer_openai.chat.completions.create({
     model: 'gpt-3.5-turbo-16k',
-    max_tokens: 4096,
     messages: [
       { role: 'system', content: system_prompt },
-      { role: 'user', content: JSON.stringify(code_changes) }
+      { role: 'user', content: user_prompt }
     ]
   })
 
+  console.log('Message from OpenAI is', response.choices[0].message.content)
   const comments_list = JSON.parse(response.choices[0].message.content)
   return comments_list
+}
+
+
+/***/ }),
+
+/***/ 2506:
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
+
+"use strict";
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "getAllReferences": () => (/* binding */ getAllReferences)
+/* harmony export */ });
+/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5375);
+/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
+
+
+const {
+  get_ignore_list,
+  shouldIgnoreFile,
+  getFileContent
+} = __nccwpck_require__(6989)
+const core = __nccwpck_require__(2186)
+
+const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
+  auth: core.getInput('github-token')
+})
+
+async function getAllFilePathsInRepo(owner, repo) {
+  const tree = await octokit.rest.git.getTree({
+    owner,
+    repo,
+    tree_sha: 'HEAD',
+    recursive: 'true',
+    headers: {
+      'X-GitHub-Api-Version': '2022-11-28'
+    }
+  })
+  return tree.data.tree
+    .filter(file => file.type === 'blob')
+    .map(file => file.path)
+}
+
+async function getAllReferences(
+  owner,
+  repo,
+  list_of_queries,
+  file_paths_to_review,
+  file_paths_to_ignore
+) {
+  const all_file_paths = await getAllFilePathsInRepo(owner, repo)
+  console.log('All file paths are: ', all_file_paths)
+  console.log('Files to ignore: ', file_paths_to_ignore)
+  console.log('Files to review: ', file_paths_to_review)
+  const files_to_search = []
+  for (const file of all_file_paths) {
+    if (shouldIgnoreFile(file, file_paths_to_ignore)) {
+      console.log(`Ignoring file: ${file} because it is in the ignore list`)
+      continue
+    }
+    if (file_paths_to_review.includes(file)) {
+      console.log(`File ${file} is in the list of files to review`)
+      continue
+    }
+    files_to_search.push(file)
+  }
+
+  console.log('Files to search all queries inside: ', files_to_search)
+
+  const results = []
+  for (const query of list_of_queries) {
+    console.log('Searching for: ', query)
+
+    for (const file_path of files_to_search) {
+      // If file_path already exists in results, skip
+      const file_path_exists = results.some(result => result.path === file_path)
+      if (file_path_exists) continue
+
+      const file_content = await getFileContent(owner, repo, file_path)
+      if (file_content.includes(query)) {
+        console.log('Found reference for: ', query, ' in ', file_path)
+        results.push({
+          path: file_path,
+          content: file_content
+        })
+      } else {
+        console.log('No reference found for: ', query, ' in ', file_path)
+      }
+    }
+  }
+  return results
 }
 
 
