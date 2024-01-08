@@ -1,21 +1,17 @@
 import { Octokit as OctokitRest } from '@octokit/rest'
 
-const {
-  get_ignore_list,
-  shouldIgnoreFile,
-  getFileContent
-} = require('./helper')
+const { shouldIgnoreFile, getFileContent } = require('./helper')
 const core = require('@actions/core')
 
 const octokit = new OctokitRest({
   auth: core.getInput('github-token')
 })
 
-async function getAllFilePathsInRepo(owner, repo) {
+async function getAllFilePathsInRepo(owner, repo, ref = 'HEAD') {
   const tree = await octokit.rest.git.getTree({
     owner,
     repo,
-    tree_sha: 'HEAD',
+    tree_sha: ref,
     recursive: 'true',
     headers: {
       'X-GitHub-Api-Version': '2022-11-28'
@@ -29,11 +25,12 @@ async function getAllFilePathsInRepo(owner, repo) {
 export async function getAllReferences(
   owner,
   repo,
+  branch_name,
   list_of_queries,
   file_paths_to_review,
   file_paths_to_ignore
 ) {
-  const all_file_paths = await getAllFilePathsInRepo(owner, repo)
+  const all_file_paths = await getAllFilePathsInRepo(owner, repo, branch_name)
   console.log('All file paths are: ', all_file_paths)
   console.log('Files to ignore: ', file_paths_to_ignore)
   console.log('Files to review: ', file_paths_to_review)
@@ -61,7 +58,12 @@ export async function getAllReferences(
       const file_path_exists = results.some(result => result.path === file_path)
       if (file_path_exists) continue
 
-      const file_content = await getFileContent(owner, repo, file_path)
+      const file_content = await getFileContent(
+        owner,
+        repo,
+        file_path,
+        branch_name
+      )
       if (file_content.includes(query)) {
         console.log('Found reference for: ', query, ' in ', file_path)
         results.push({

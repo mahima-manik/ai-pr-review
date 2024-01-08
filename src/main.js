@@ -15,10 +15,13 @@ export async function run() {
   try {
     const owner = github.context.payload.pull_request.base.repo.owner.login
     const repo = github.context.payload.pull_request.base.repo.name
+    const pr_branch_name = github.context.payload.pull_request.head.ref
+
     const file_paths_to_ignore = await get_ignore_list(
       owner,
       repo,
-      '.reviewignore'
+      '.reviewignore',
+      pr_branch_name
     )
     const pr_diff = await parsePR(
       github.context.payload.pull_request,

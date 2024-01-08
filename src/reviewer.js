@@ -47,9 +47,11 @@ export async function generateComments(code_changes, file_paths_to_ignore) {
   const pr_file_changes = code_changes.changes
   const file_paths_to_review = pr_file_changes.map(change => change.filename)
 
+  const pr_branch_name = github.context.payload.pull_request.head.ref
   const extra_files_context = await getAllReferences(
     github.context.payload.pull_request.base.repo.owner.login,
     github.context.payload.pull_request.base.repo.name,
+    pr_branch_name,
     more_info_list,
     file_paths_to_review,
     file_paths_to_ignore
