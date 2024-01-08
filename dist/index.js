@@ -39005,6 +39005,7 @@ async function getFileContent(owner, repo, file_path, ref = 'HEAD') {
  * @param {*} owner
  * @param {*} repo
  * @param {*} file_path
+ * @param {*} ref
  * @returns {Promise<string[]>} Resolves to the list of files
  */
 async function get_ignore_list(owner, repo, file_path, ref = 'HEAD') {
