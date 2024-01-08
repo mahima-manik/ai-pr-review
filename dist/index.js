@@ -38977,12 +38977,13 @@ const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
   auth: core.getInput('github-token')
 })
 
-async function getFileContent(owner, repo, file_path) {
+async function getFileContent(owner, repo, file_path, ref = 'HEAD') {
   try {
     const response = await octokit.rest.repos.getContent({
       owner,
       repo,
       path: file_path,
+      ref,
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
       },
@@ -39004,11 +39005,11 @@ async function getFileContent(owner, repo, file_path) {
  * @param {*} owner
  * @param {*} repo
  * @param {*} file_path
+ * @param {*} ref
  * @returns {Promise<string[]>} Resolves to the list of files
  */
-async function get_ignore_list(owner, repo, file_path) {
-  const content = await getFileContent(owner, repo, file_path)
-  console.log('Content of .reviewignore is: ', content)
+async function get_ignore_list(owner, repo, file_path, ref = 'HEAD') {
+  const content = await getFileContent(owner, repo, file_path, ref)
   const files_to_ignore = content
     .split('\n')
     .filter(line => !line.startsWith('#') && line !== '')
@@ -39052,10 +39053,13 @@ async function run() {
   try {
     const owner = github.context.payload.pull_request.base.repo.owner.login
     const repo = github.context.payload.pull_request.base.repo.name
+    const pr_branch_name = github.context.payload.pull_request.head.ref
+
     const file_paths_to_ignore = await (0,_helper__WEBPACK_IMPORTED_MODULE_0__.get_ignore_list)(
       owner,
       repo,
-      '.reviewignore'
+      '.reviewignore',
+      pr_branch_name
     )
     const pr_diff = await parsePR(
       github.context.payload.pull_request,
@@ -43162,9 +43166,11 @@ async function generateComments(code_changes, file_paths_to_ignore) {
   const pr_file_changes = code_changes.changes
   const file_paths_to_review = pr_file_changes.map(change => change.filename)
 
+  const pr_branch_name = github.context.payload.pull_request.head.ref
   const extra_files_context = await getAllReferences(
     github.context.payload.pull_request.base.repo.owner.login,
     github.context.payload.pull_request.base.repo.name,
+    pr_branch_name,
     more_info_list,
     file_paths_to_review,
     file_paths_to_ignore
@@ -43216,22 +43222,18 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
 
 
-const {
-  get_ignore_list,
-  shouldIgnoreFile,
-  getFileContent
-} = __nccwpck_require__(6989)
+const { shouldIgnoreFile, getFileContent } = __nccwpck_require__(6989)
 const core = __nccwpck_require__(2186)
 
 const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
   auth: core.getInput('github-token')
 })
 
-async function getAllFilePathsInRepo(owner, repo) {
+async function getAllFilePathsInRepo(owner, repo, ref = 'HEAD') {
   const tree = await octokit.rest.git.getTree({
     owner,
     repo,
-    tree_sha: 'HEAD',
+    tree_sha: ref,
     recursive: 'true',
     headers: {
       'X-GitHub-Api-Version': '2022-11-28'
@@ -43245,11 +43247,12 @@ async function getAllFilePathsInRepo(owner, repo) {
 async function getAllReferences(
   owner,
   repo,
+  branch_name,
   list_of_queries,
   file_paths_to_review,
   file_paths_to_ignore
 ) {
-  const all_file_paths = await getAllFilePathsInRepo(owner, repo)
+  const all_file_paths = await getAllFilePathsInRepo(owner, repo, branch_name)
   console.log('All file paths are: ', all_file_paths)
   console.log('Files to ignore: ', file_paths_to_ignore)
   console.log('Files to review: ', file_paths_to_review)
@@ -43277,7 +43280,12 @@ async function getAllReferences(
       const file_path_exists = results.some(result => result.path === file_path)
       if (file_path_exists) continue
 
-      const file_content = await getFileContent(owner, repo, file_path)
+      const file_content = await getFileContent(
+        owner,
+        repo,
+        file_path,
+        branch_name
+      )
       if (file_content.includes(query)) {
         console.log('Found reference for: ', query, ' in ', file_path)
         results.push({

@@ -5,12 +5,13 @@ const octokit = new OctokitRest({
   auth: core.getInput('github-token')
 })
 
-export async function getFileContent(owner, repo, file_path) {
+export async function getFileContent(owner, repo, file_path, ref = 'HEAD') {
   try {
     const response = await octokit.rest.repos.getContent({
       owner,
       repo,
       path: file_path,
+      ref,
       headers: {
         'X-GitHub-Api-Version': '2022-11-28'
       },
@@ -32,11 +33,11 @@ export async function getFileContent(owner, repo, file_path) {
  * @param {*} owner
  * @param {*} repo
  * @param {*} file_path
+ * @param {*} ref
  * @returns {Promise<string[]>} Resolves to the list of files
  */
-export async function get_ignore_list(owner, repo, file_path) {
-  const content = await getFileContent(owner, repo, file_path)
-  console.log('Content of .reviewignore is: ', content)
+export async function get_ignore_list(owner, repo, file_path, ref = 'HEAD') {
+  const content = await getFileContent(owner, repo, file_path, ref)
   const files_to_ignore = content
     .split('\n')
     .filter(line => !line.startsWith('#') && line !== '')
