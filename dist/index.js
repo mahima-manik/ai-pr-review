@@ -39065,13 +39065,13 @@ async function run() {
     const comments_list = await generateComments(pr_diff, file_paths_to_ignore)
     console.log('PR comments are: ', comments_list)
 
-    // const response = await addCommentToPR(
-    //   github.context.payload.pull_request.base.repo.owner.login,
-    //   github.context.payload.pull_request.base.repo.name,
-    //   github.context.payload.pull_request.number,
-    //   comments_list
-    // )
-    // console.log('Response is: ', response)
+    const response = await addCommentToPR(
+      github.context.payload.pull_request.base.repo.owner.login,
+      github.context.payload.pull_request.base.repo.name,
+      github.context.payload.pull_request.number,
+      comments_list
+    )
+    console.log('Response is: ', response)
   } catch (error) {
     // Fail the workflow run if an error occurs
     console.error(error)
