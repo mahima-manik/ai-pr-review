@@ -39214,7 +39214,7 @@ __nccwpck_require__.d(error_namespaceObject, {
 });
 
 ;// CONCATENATED MODULE: ./node_modules/openai/version.mjs
-const VERSION = '4.20.1'; // x-release-please-version
+const VERSION = '4.24.1'; // x-release-please-version
 //# sourceMappingURL=version.mjs.map
 ;// CONCATENATED MODULE: ./node_modules/openai/_shims/registry.mjs
 let auto = false;
@@ -39732,7 +39732,8 @@ class APIError extends error_OpenAIError {
     }
     static makeMessage(status, error, message) {
         const msg = error?.message ?
-            typeof error.message === 'string' ? error.message
+            typeof error.message === 'string' ?
+                error.message
                 : JSON.stringify(error.message)
             : error ? JSON.stringify(error)
                 : message;
@@ -40259,7 +40260,8 @@ async function getBytes(value) {
         }
     }
     else {
-        throw new Error(`Unexpected data type: ${typeof value}; constructor: ${value?.constructor?.name}; props: ${propsForError(value)}`);
+        throw new Error(`Unexpected data type: ${typeof value}; constructor: ${value?.constructor
+            ?.name}; props: ${propsForError(value)}`);
     }
     return parts;
 }
@@ -41148,11 +41150,11 @@ const toBase64 = (str) => {
 class Page extends AbstractPage {
     constructor(client, response, body, options) {
         super(client, response, body, options);
-        this.data = body.data;
+        this.data = body.data || [];
         this.object = body.object;
     }
     getPaginatedItems() {
-        return this.data;
+        return this.data ?? [];
     }
     // @deprecated Please use `nextPageInfo()` instead
     /**
@@ -41169,10 +41171,10 @@ class Page extends AbstractPage {
 class CursorPage extends AbstractPage {
     constructor(client, response, body, options) {
         super(client, response, body, options);
-        this.data = body.data;
+        this.data = body.data || [];
     }
     getPaginatedItems() {
-        return this.data;
+        return this.data ?? [];
     }
     // @deprecated Please use `nextPageInfo()` instead
     nextPageParams() {
@@ -41187,13 +41189,15 @@ class CursorPage extends AbstractPage {
         return params;
     }
     nextPageInfo() {
-        if (!this.data?.length) {
+        const data = this.getPaginatedItems();
+        if (!data.length) {
             return null;
         }
-        const next = this.data[this.data.length - 1]?.id;
-        if (!next)
+        const id = data[data.length - 1]?.id;
+        if (!id) {
             return null;
-        return { params: { after: next } };
+        }
+        return { params: { after: id } };
     }
 }
 //# sourceMappingURL=pagination.mjs.map
@@ -41284,10 +41288,11 @@ class Embeddings extends APIResource {
 
 class Files extends APIResource {
     /**
-     * Upload a file that can be used across various endpoints/features. The size of
-     * all the files uploaded by one organization can be up to 100 GB.
+     * Upload a file that can be used across various endpoints. The size of all the
+     * files uploaded by one organization can be up to 100 GB.
      *
-     * The size of individual files for can be a maximum of 512MB. See the
+     * The size of individual files can be a maximum of 512 MB or 2 million tokens for
+     * Assistants. See the
      * [Assistants Tools guide](https://platform.openai.com/docs/assistants/tools) to
      * learn more about the types of files supported. The Fine-tuning API only supports
      * `.jsonl` files.
@@ -41761,6 +41766,8 @@ function isRunnableFunctionWithParse(fn) {
 /**
  * This is helper class for passing a `function` and `parse` where the `function`
  * argument type matches the `parse` return type.
+ *
+ * @deprecated - please use ParsingToolFunction instead.
  */
 class ParsingFunction {
     constructor(input) {
@@ -41769,6 +41776,16 @@ class ParsingFunction {
         this.parameters = input.parameters;
         this.description = input.description;
         this.name = input.name;
+    }
+}
+/**
+ * This is helper class for passing a `function` and `parse` where the `function`
+ * argument type matches the `parse` return type.
+ */
+class ParsingToolFunction {
+    constructor(input) {
+        this.type = 'function';
+        this.function = input;
     }
 }
 //# sourceMappingURL=RunnableFunction.mjs.map
@@ -41874,6 +41891,8 @@ class AbstractChatCompletionRunner {
         return chatCompletion;
     }
     _addMessage(message, emit = true) {
+        if (!('content' in message))
+            message.content = null;
         this.messages.push(message);
         if (emit) {
             this._emit('message', message);
@@ -42020,8 +42039,9 @@ class AbstractChatCompletionRunner {
     }
     _emit(event, ...args) {
         // make sure we don't emit any events after end
-        if (AbstractChatCompletionRunner_classPrivateFieldGet(this, _AbstractChatCompletionRunner_ended, "f"))
+        if (AbstractChatCompletionRunner_classPrivateFieldGet(this, _AbstractChatCompletionRunner_ended, "f")) {
             return;
+        }
         if (event === 'end') {
             AbstractChatCompletionRunner_classPrivateFieldSet(this, _AbstractChatCompletionRunner_ended, true, "f");
             AbstractChatCompletionRunner_classPrivateFieldGet(this, _AbstractChatCompletionRunner_resolveEndPromise, "f").call(this);
@@ -42062,7 +42082,7 @@ class AbstractChatCompletionRunner {
         const completion = this._chatCompletions[this._chatCompletions.length - 1];
         if (completion)
             this._emit('finalChatCompletion', completion);
-        const finalMessage = this.messages[this.messages.length - 1];
+        const finalMessage = AbstractChatCompletionRunner_classPrivateFieldGet(this, _AbstractChatCompletionRunner_instances, "m", _AbstractChatCompletionRunner_getFinalMessage).call(this);
         if (finalMessage)
             this._emit('finalMessage', finalMessage);
         const finalContent = AbstractChatCompletionRunner_classPrivateFieldGet(this, _AbstractChatCompletionRunner_instances, "m", _AbstractChatCompletionRunner_getFinalContent).call(this);
@@ -42197,8 +42217,9 @@ class AbstractChatCompletionRunner {
             if (!message) {
                 throw new error_OpenAIError(`missing message in ChatCompletion response`);
             }
-            if (!message.tool_calls)
+            if (!message.tool_calls) {
                 return;
+            }
             for (const tool_call of message.tool_calls) {
                 if (tool_call.type !== 'function')
                     continue;
@@ -42230,20 +42251,22 @@ class AbstractChatCompletionRunner {
                 const rawContent = await fn.function(parsed, this);
                 const content = AbstractChatCompletionRunner_classPrivateFieldGet(this, _AbstractChatCompletionRunner_instances, "m", _AbstractChatCompletionRunner_stringifyFunctionCallResult).call(this, rawContent);
                 this._addMessage({ role, tool_call_id, content });
-                if (singleFunctionToCall)
+                if (singleFunctionToCall) {
                     return;
+                }
             }
         }
+        return;
     }
 }
 _AbstractChatCompletionRunner_connectedPromise = new WeakMap(), _AbstractChatCompletionRunner_resolveConnectedPromise = new WeakMap(), _AbstractChatCompletionRunner_rejectConnectedPromise = new WeakMap(), _AbstractChatCompletionRunner_endPromise = new WeakMap(), _AbstractChatCompletionRunner_resolveEndPromise = new WeakMap(), _AbstractChatCompletionRunner_rejectEndPromise = new WeakMap(), _AbstractChatCompletionRunner_listeners = new WeakMap(), _AbstractChatCompletionRunner_ended = new WeakMap(), _AbstractChatCompletionRunner_errored = new WeakMap(), _AbstractChatCompletionRunner_aborted = new WeakMap(), _AbstractChatCompletionRunner_catchingPromiseCreated = new WeakMap(), _AbstractChatCompletionRunner_handleError = new WeakMap(), _AbstractChatCompletionRunner_instances = new WeakSet(), _AbstractChatCompletionRunner_getFinalContent = function _AbstractChatCompletionRunner_getFinalContent() {
-    return AbstractChatCompletionRunner_classPrivateFieldGet(this, _AbstractChatCompletionRunner_instances, "m", _AbstractChatCompletionRunner_getFinalMessage).call(this).content;
+    return AbstractChatCompletionRunner_classPrivateFieldGet(this, _AbstractChatCompletionRunner_instances, "m", _AbstractChatCompletionRunner_getFinalMessage).call(this).content ?? null;
 }, _AbstractChatCompletionRunner_getFinalMessage = function _AbstractChatCompletionRunner_getFinalMessage() {
     let i = this.messages.length;
     while (i-- > 0) {
         const message = this.messages[i];
         if (isAssistantMessage(message)) {
-            return message;
+            return { ...message, content: message.content ?? null };
         }
     }
     throw new error_OpenAIError('stream ended without producing a ChatCompletionMessage with role=assistant');
@@ -42253,12 +42276,21 @@ _AbstractChatCompletionRunner_connectedPromise = new WeakMap(), _AbstractChatCom
         if (isAssistantMessage(message) && message?.function_call) {
             return message.function_call;
         }
+        if (isAssistantMessage(message) && message?.tool_calls?.length) {
+            return message.tool_calls.at(-1)?.function;
+        }
     }
     return;
 }, _AbstractChatCompletionRunner_getFinalFunctionCallResult = function _AbstractChatCompletionRunner_getFinalFunctionCallResult() {
     for (let i = this.messages.length - 1; i >= 0; i--) {
         const message = this.messages[i];
         if (isFunctionMessage(message) && message.content != null) {
+            return message.content;
+        }
+        if (isToolMessage(message) &&
+            message.content != null &&
+            this.messages.some((x) => x.role === 'assistant' &&
+                x.tool_calls?.some((y) => y.type === 'function' && y.id === message.tool_call_id))) {
             return message.content;
         }
     }
@@ -42291,14 +42323,23 @@ _AbstractChatCompletionRunner_connectedPromise = new WeakMap(), _AbstractChatCom
 
 
 class ChatCompletionRunner extends AbstractChatCompletionRunner {
+    /** @deprecated - please use `runTools` instead. */
     static runFunctions(completions, params, options) {
         const runner = new ChatCompletionRunner();
-        runner._run(() => runner._runFunctions(completions, params, options));
+        const opts = {
+            ...options,
+            headers: { ...options?.headers, 'X-Stainless-Helper-Method': 'runFunctions' },
+        };
+        runner._run(() => runner._runFunctions(completions, params, opts));
         return runner;
     }
     static runTools(completions, params, options) {
         const runner = new ChatCompletionRunner();
-        runner._run(() => runner._runTools(completions, params, options));
+        const opts = {
+            ...options,
+            headers: { ...options?.headers, 'X-Stainless-Helper-Method': 'runTools' },
+        };
+        runner._run(() => runner._runTools(completions, params, opts));
         return runner;
     }
     _addMessage(message) {
@@ -42418,7 +42459,7 @@ class ChatCompletionStream extends AbstractChatCompletionRunner {
         ChatCompletionStream_classPrivateFieldSet(this, _ChatCompletionStream_currentChatCompletionSnapshot, undefined, "f");
         return finalizeChatCompletion(snapshot);
     }, _ChatCompletionStream_accumulateChatCompletion = function _ChatCompletionStream_accumulateChatCompletion(chunk) {
-        var _a, _b;
+        var _a, _b, _c;
         let snapshot = ChatCompletionStream_classPrivateFieldGet(this, _ChatCompletionStream_currentChatCompletionSnapshot, "f");
         const { choices, ...rest } = chunk;
         if (!snapshot) {
@@ -42430,11 +42471,20 @@ class ChatCompletionStream extends AbstractChatCompletionRunner {
         else {
             Object.assign(snapshot, rest);
         }
-        for (const { delta, finish_reason, index, ...other } of chunk.choices) {
+        for (const { delta, finish_reason, index, logprobs = null, ...other } of chunk.choices) {
             let choice = snapshot.choices[index];
             if (!choice) {
-                snapshot.choices[index] = { finish_reason, index, message: delta, ...other };
+                snapshot.choices[index] = { finish_reason, index, message: delta, logprobs, ...other };
                 continue;
+            }
+            if (logprobs) {
+                if (!choice.logprobs) {
+                    choice.logprobs = logprobs;
+                }
+                else if (logprobs.content) {
+                    (_a = choice.logprobs).content ?? (_a.content = []);
+                    choice.logprobs.content.push(...logprobs.content);
+                }
             }
             if (finish_reason)
                 choice.finish_reason = finish_reason;
@@ -42454,7 +42504,7 @@ class ChatCompletionStream extends AbstractChatCompletionRunner {
                     if (function_call.name)
                         choice.message.function_call.name = function_call.name;
                     if (function_call.arguments) {
-                        (_a = choice.message.function_call).arguments ?? (_a.arguments = '');
+                        (_b = choice.message.function_call).arguments ?? (_b.arguments = '');
                         choice.message.function_call.arguments += function_call.arguments;
                     }
                 }
@@ -42463,7 +42513,7 @@ class ChatCompletionStream extends AbstractChatCompletionRunner {
                 if (!choice.message.tool_calls)
                     choice.message.tool_calls = [];
                 for (const { index, id, type, function: fn } of tool_calls) {
-                    const tool_call = ((_b = choice.message.tool_calls)[index] ?? (_b[index] = {}));
+                    const tool_call = ((_c = choice.message.tool_calls)[index] ?? (_c[index] = {}));
                     if (id)
                         tool_call.id = id;
                     if (type)
@@ -42520,7 +42570,7 @@ function finalizeChatCompletion(snapshot) {
     const { id, choices, created, model } = snapshot;
     return {
         id,
-        choices: choices.map(({ message, finish_reason, index }) => {
+        choices: choices.map(({ message, finish_reason, index, logprobs }) => {
             if (!finish_reason)
                 throw new error_OpenAIError(`missing finish_reason for choice ${index}`);
             const { content = null, function_call, tool_calls } = message;
@@ -42533,12 +42583,18 @@ function finalizeChatCompletion(snapshot) {
                     throw new error_OpenAIError(`missing function_call.arguments for choice ${index}`);
                 if (!name)
                     throw new error_OpenAIError(`missing function_call.name for choice ${index}`);
-                return { message: { content, function_call: { arguments: args, name }, role }, finish_reason, index };
+                return {
+                    message: { content, function_call: { arguments: args, name }, role },
+                    finish_reason,
+                    index,
+                    logprobs,
+                };
             }
             if (tool_calls) {
                 return {
                     index,
                     finish_reason,
+                    logprobs,
                     message: {
                         role,
                         content,
@@ -42558,7 +42614,7 @@ function finalizeChatCompletion(snapshot) {
                     },
                 };
             }
-            return { message: { content: content, role }, finish_reason, index };
+            return { message: { content: content, role }, finish_reason, index, logprobs };
         }),
         created,
         model,
@@ -42577,20 +42633,23 @@ class ChatCompletionStreamingRunner extends ChatCompletionStream {
         runner._run(() => runner._fromReadableStream(stream));
         return runner;
     }
+    /** @deprecated - please use `runTools` instead. */
     static runFunctions(completions, params, options) {
         const runner = new ChatCompletionStreamingRunner();
-        runner._run(() => runner._runFunctions(completions, params, {
+        const opts = {
             ...options,
             headers: { ...options?.headers, 'X-Stainless-Helper-Method': 'runFunctions' },
-        }));
+        };
+        runner._run(() => runner._runFunctions(completions, params, opts));
         return runner;
     }
     static runTools(completions, params, options) {
         const runner = new ChatCompletionStreamingRunner();
-        runner._run(() => runner._runTools(completions, params, {
+        const opts = {
             ...options,
             headers: { ...options?.headers, 'X-Stainless-Helper-Method': 'runTools' },
-        }));
+        };
+        runner._run(() => runner._runTools(completions, params, opts));
         return runner;
     }
 }
@@ -42950,9 +43009,9 @@ class OpenAI extends APIClient {
     /**
      * API Client for interfacing with the OpenAI API.
      *
-     * @param {string} [opts.apiKey==process.env['OPENAI_API_KEY'] ?? undefined]
-     * @param {string | null} [opts.organization==process.env['OPENAI_ORG_ID'] ?? null]
-     * @param {string} [opts.baseURL] - Override the default base URL for the API.
+     * @param {string} [opts.apiKey=process.env['OPENAI_API_KEY'] ?? undefined]
+     * @param {string | null} [opts.organization=process.env['OPENAI_ORG_ID'] ?? null]
+     * @param {string} [opts.baseURL=process.env['OPENAI_BASE_URL'] ?? https://api.openai.com/v1] - Override the default base URL for the API.
      * @param {number} [opts.timeout=10 minutes] - The maximum amount of time (in milliseconds) the client will wait for a response before timing out.
      * @param {number} [opts.httpAgent] - An HTTP agent used to manage HTTP(s) connections.
      * @param {Core.Fetch} [opts.fetch] - Specify a custom `fetch` function implementation.
@@ -42961,7 +43020,7 @@ class OpenAI extends APIClient {
      * @param {Core.DefaultQuery} opts.defaultQuery - Default query parameters to include with every request to the API.
      * @param {boolean} [opts.dangerouslyAllowBrowser=false] - By default, client-side use of this library is not allowed, as it risks exposing your secret API credentials to attackers.
      */
-    constructor({ apiKey = readEnv('OPENAI_API_KEY'), organization = readEnv('OPENAI_ORG_ID') ?? null, ...opts } = {}) {
+    constructor({ baseURL = readEnv('OPENAI_BASE_URL'), apiKey = readEnv('OPENAI_API_KEY'), organization = readEnv('OPENAI_ORG_ID') ?? null, ...opts } = {}) {
         if (apiKey === undefined) {
             throw new error_OpenAIError("The OPENAI_API_KEY environment variable is missing or empty; either provide it, or instantiate the OpenAI client with an apiKey option, like new OpenAI({ apiKey: 'My API Key' }).");
         }
@@ -42969,7 +43028,7 @@ class OpenAI extends APIClient {
             apiKey,
             organization,
             ...opts,
-            baseURL: opts.baseURL ?? `https://api.openai.com/v1`,
+            baseURL: baseURL ?? `https://api.openai.com/v1`,
         };
         if (!options.dangerouslyAllowBrowser && isRunningInBrowser()) {
             throw new error_OpenAIError("It looks like you're running in a browser-like environment.\n\nThis is disabled by default, as it risks exposing your secret API credentials to attackers.\nIf you understand the risks and have appropriate mitigations in place,\nyou can set the `dangerouslyAllowBrowser` option to `true`, e.g.,\n\nnew OpenAI({ apiKey, dangerouslyAllowBrowser: true });\n\nhttps://help.openai.com/en/articles/5112595-best-practices-for-api-key-safety\n");
