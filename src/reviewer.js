@@ -20,7 +20,7 @@ async function getMoreInfo(code_changes) {
     'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo-1106',
+    model: 'gpt-3.5-turbo',
     messages: [
       { role: 'system', content: prompt },
       { role: 'user', content: JSON.stringify(code_changes) }
@@ -79,12 +79,12 @@ export async function generateComments(code_changes, file_paths_to_ignore) {
   console.log('User prompt is: ', user_prompt)
 
   const response = await openai.chat.completions.create({
-    model: 'gpt-3.5-turbo-16k',
+    model: 'gpt-3.5-turbo-1106',
     messages: [
       { role: 'system', content: system_prompt },
       { role: 'user', content: user_prompt }
     ],
-    response_format: 'json'
+    response_format: 'json_object'
   })
 
   console.log('Message from OpenAI is', response.choices[0].message.content)
