@@ -43139,7 +43139,7 @@ async function getMoreInfo(code_changes) {
     'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'
 
   const response = await reviewer_openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
+    model: 'gpt-3.5-turbo-1106',
     messages: [
       { role: 'system', content: prompt },
       { role: 'user', content: JSON.stringify(code_changes) }
