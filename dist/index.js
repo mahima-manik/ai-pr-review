@@ -43163,10 +43163,12 @@ async function getMoreInfo(code_changes) {
 async function generateComments(code_changes, file_paths_to_ignore) {
   const more_info_list = await getMoreInfo(code_changes)
   console.log('More information is required on following: ', more_info_list)
+
   const pr_file_changes = code_changes.changes
   const file_paths_to_review = pr_file_changes.map(change => change.filename)
 
   const pr_branch_name = github.context.payload.pull_request.head.ref
+
   const extra_files_context = await getAllReferences(
     github.context.payload.pull_request.base.repo.owner.login,
     github.context.payload.pull_request.base.repo.name,
@@ -43183,9 +43185,10 @@ async function generateComments(code_changes, file_paths_to_ignore) {
     'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
     'Only provide the comments that you are confident about. ' +
     'Extra files are provided for reference, but not to review. ' +
-    'Return ONLY a list of dictionary in format: ' +
-    '[{"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}].' +
-    'If you have no comments, return an empty list.'
+    'Return your comments in JSON format: ' +
+    '{1: {"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}, ' +
+    ' 2: {"path", "path/to/file", "position": line_number on code_after_change, "body": "comment"}}' +
+    'If you have no comments, return an empty JSON.'
 
   const user_prompt = `Files to review: 
     ${JSON.stringify(code_changes)} \n
@@ -43199,12 +43202,13 @@ async function generateComments(code_changes, file_paths_to_ignore) {
     messages: [
       { role: 'system', content: system_prompt },
       { role: 'user', content: user_prompt }
-    ]
+    ],
+    response_format: 'json'
   })
 
   console.log('Message from OpenAI is', response.choices[0].message.content)
-  const comments_list = JSON.parse(response.choices[0].message.content)
-  return comments_list
+  const comments_json_list = JSON.parse(response.choices[0].message.content)
+  return list(comments_json_list.values())
 }
 
 
