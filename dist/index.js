@@ -28934,6 +28934,7 @@ class AIReviewer {
 
   async formatPrChanges() {
     const diffString = await this.pull_request.getDiffString()
+    console.log('Diff string is: ', diffString)
     const files_to_ignore = await this.getIgnoreList()
 
     const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
