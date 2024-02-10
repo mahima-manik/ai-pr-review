@@ -1,5 +1,6 @@
-const PullRequest = require('./pull_request')
-const AIReviewer = require('./ai_reviewer')
+/* eslint-disable import/extensions */
+const PullRequest = require('./pull_request.js').PullRequest
+const AIReviewer = require('./ai_reviewer.js')
 
 const core = require('@actions/core')
 const github = require('@actions/github')

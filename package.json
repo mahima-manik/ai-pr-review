@@ -1,8 +1,8 @@
 {
-  "name": "javascript-action",
-  "description": "GitHub Actions JavaScript Template",
-  "version": "0.0.0",
-  "author": "",
+  "name": "ai-pr-review",
+  "description": "GitHub Actions to review PR using AI",
+  "version": "1.0.0",
+  "author": "mahima-manik",
   "private": true,
   "homepage": "https://github.com/actions/javascript-action#readme",
   "repository": {
