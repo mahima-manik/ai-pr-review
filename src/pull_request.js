@@ -1,4 +1,7 @@
 const github = require('@actions/github')
+const core = require('@actions/core')
+
+const GITHUB_TOKEN = core.getInput('github-token')
 
 class PullRequest {
   constructor(pr_context) {
@@ -12,7 +15,7 @@ class PullRequest {
   }
 
   async getDiffString() {
-    const octokit = github.getOctokit(process.env.GITHUB_TOKEN)
+    const octokit = github.getOctokit(GITHUB_TOKEN)
     const response = await octokit.rest.pulls.get({
       owner: this.repo_owner,
       repo: this.repo_name,
@@ -26,7 +29,7 @@ class PullRequest {
   }
 
   async getFileContent(file_path) {
-    const octokit = github.getOctokit(process.env.GITHUB_TOKEN)
+    const octokit = github.getOctokit(GITHUB_TOKEN)
     const response = await octokit.rest.repos.getContent({
       owner: this.repo_owner,
       repo: this.repo_name,
@@ -40,7 +43,7 @@ class PullRequest {
   }
 
   async addReview(list_of_comments) {
-    const octokit = github.getOctokit(process.env.GITHUB_TOKEN)
+    const octokit = github.getOctokit(GITHUB_TOKEN)
 
     const response = await octokit.rest.pulls.createReview({
       owner: this.repo_owner,
