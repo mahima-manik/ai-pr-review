@@ -1,11 +1,10 @@
-import { get_ignore_list } from './helper'
+/* eslint-disable import/extensions */
+const { PullRequest } = require('./pull_request.js')
+const { AIReviewer } = require('./ai_reviewer.js')
+const { OpenAIInterface } = require('./llm_interface.js')
 
 const core = require('@actions/core')
 const github = require('@actions/github')
-
-const { parsePR } = require('./parse')
-const { generateComments } = require('./reviewer')
-const { addCommentToPR } = require('./comments')
 
 /**
  * The main function for the action.
@@ -13,31 +12,20 @@ const { addCommentToPR } = require('./comments')
  */
 export async function run() {
   try {
-    const owner = github.context.payload.pull_request.base.repo.owner.login
-    const repo = github.context.payload.pull_request.base.repo.name
-    const pr_branch_name = github.context.payload.pull_request.head.ref
+    const pr_context = github.context.payload.pull_request
+    const pull_request = new PullRequest(pr_context)
+    console.log('Pull request is: ', pull_request.pr_branch_name)
+    const reviewer = new AIReviewer(pull_request)
+    await reviewer.formatPrChanges()
+    console.log('Response is: ', reviewer.fomatted_changes)
 
-    const file_paths_to_ignore = await get_ignore_list(
-      owner,
-      repo,
-      '.reviewignore',
-      pr_branch_name
+    const openai_key = core.getInput('openai-key')
+    const openai_interface = new OpenAIInterface(openai_key)
+    const comments_list = openai_interface.getCommentsonPR(
+      reviewer.fomatted_changes
     )
-    const pr_diff = await parsePR(
-      github.context.payload.pull_request,
-      file_paths_to_ignore
-    )
-
-    const comments_list = await generateComments(pr_diff, file_paths_to_ignore)
-    console.log('PR comments are: ', comments_list)
-
-    const response = await addCommentToPR(
-      github.context.payload.pull_request.base.repo.owner.login,
-      github.context.payload.pull_request.base.repo.name,
-      github.context.payload.pull_request.number,
-      comments_list
-    )
-    console.log('Response is: ', response)
+    console.log('Comments are: ', comments_list)
+    pull_request.addReview(comments_list)
   } catch (error) {
     // Fail the workflow run if an error occurs
     console.error(error)

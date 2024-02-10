@@ -3282,66 +3282,6 @@ paginateRest.VERSION = VERSION;
 
 /***/ }),
 
-/***/ 8883:
-/***/ ((module) => {
-
-"use strict";
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
-  requestLog: () => requestLog
-});
-module.exports = __toCommonJS(dist_src_exports);
-
-// pkg/dist-src/version.js
-var VERSION = "4.0.0";
-
-// pkg/dist-src/index.js
-function requestLog(octokit) {
-  octokit.hook.wrap("request", (request, options) => {
-    octokit.log.debug("request", options);
-    const start = Date.now();
-    const requestOptions = octokit.request.endpoint.parse(options);
-    const path = requestOptions.url.replace(options.baseUrl, "");
-    return request(options).then((response) => {
-      octokit.log.info(
-        `${requestOptions.method} ${path} - ${response.status} in ${Date.now() - start}ms`
-      );
-      return response;
-    }).catch((error) => {
-      octokit.log.info(
-        `${requestOptions.method} ${path} - ${error.status} in ${Date.now() - start}ms`
-      );
-      throw error;
-    });
-  });
-}
-requestLog.VERSION = VERSION;
-// Annotate the CommonJS export names for ESM import in node:
-0 && (0);
-
-
-/***/ }),
-
 /***/ 3044:
 /***/ ((module) => {
 
@@ -5767,57 +5707,6 @@ var request = withDefaults(import_endpoint.endpoint, {
   headers: {
     "user-agent": `octokit-request.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`
   }
-});
-// Annotate the CommonJS export names for ESM import in node:
-0 && (0);
-
-
-/***/ }),
-
-/***/ 5375:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
-  Octokit: () => Octokit
-});
-module.exports = __toCommonJS(dist_src_exports);
-var import_core = __nccwpck_require__(6762);
-var import_plugin_request_log = __nccwpck_require__(8883);
-var import_plugin_paginate_rest = __nccwpck_require__(4193);
-var import_plugin_rest_endpoint_methods = __nccwpck_require__(3044);
-
-// pkg/dist-src/version.js
-var VERSION = "20.0.2";
-
-// pkg/dist-src/index.js
-var Octokit = import_core.Octokit.plugin(
-  import_plugin_request_log.requestLog,
-  import_plugin_rest_endpoint_methods.legacyRestEndpointMethods,
-  import_plugin_paginate_rest.paginateRest
-).defaults({
-  userAgent: `octokit-rest.js/${VERSION}`
 });
 // Annotate the CommonJS export names for ESM import in node:
 0 && (0);
@@ -38913,290 +38802,96 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 4975:
-/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
+/***/ 1776:
+/***/ ((module) => {
 
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "addCommentToPR": () => (/* binding */ addCommentToPR)
-/* harmony export */ });
-/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5375);
-/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
+class AIReviewer {
+  constructor(pull_request) {
+    this.pull_request = pull_request
+    this.fomatted_changes = []
+  }
 
-const core = __nccwpck_require__(2186)
+  async getIgnoreList() {
+    const content = await this.pull_request.getFileContent('.reviewignore')
+    const files_to_ignore = content
+      .split('\n')
+      .filter(line => !line.startsWith('#') && line !== '')
+    return files_to_ignore
+  }
 
-const GITHUB_TOKEN = core.getInput('github-token')
-
-/**
- * Adds list of comments to a PR.
- * @param {string} owner The owner of the PR.
- * @param {string} repo The repo of the PR.
- * @param {number} pr_number The number of the PR.
- * @param {object[]} list_of_comments The list of comments to add to the PR.
- * @returns {Promise<boolean>} True if the comment was added successfully, false otherwise.
- */
-async function addCommentToPR(owner, repo, pr_number, list_of_comments) {
-  const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
-    auth: GITHUB_TOKEN
-  })
-
-  const response = await octokit.rest.pulls.createReview({
-    owner,
-    repo,
-    pull_number: pr_number,
-    event: 'COMMENT',
-    comments: list_of_comments
-  })
-
-  console.log('Response from adding comment: ', response)
-
-  // Return true if comment was added successfully
-  return response.status === 200
-}
-
-
-/***/ }),
-
-/***/ 6989:
-/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "getFileContent": () => (/* binding */ getFileContent),
-/* harmony export */   "get_ignore_list": () => (/* binding */ get_ignore_list),
-/* harmony export */   "shouldIgnoreFile": () => (/* binding */ shouldIgnoreFile)
-/* harmony export */ });
-/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5375);
-/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
-
-const core = __nccwpck_require__(2186)
-
-const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
-  auth: core.getInput('github-token')
-})
-
-async function getFileContent(owner, repo, file_path, ref = 'HEAD') {
-  try {
-    const response = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: file_path,
-      ref,
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
-      },
-      mediaType: {
-        format: 'raw'
-      }
+  shouldIgnoreFile(filename, files_to_ignore) {
+    // Check if filename matches any pattern in files_to_ignore
+    return files_to_ignore.some(pattern => {
+      // Exact match for files or starts with match for directories
+      return filename === pattern || filename.startsWith(`${pattern}`)
     })
-
-    const content = response.data
-    return content
-  } catch (error) {
-    console.log(error)
-    return ''
   }
-}
 
-/**
- * Get the list of files to ignore from the .reviewignore file in the repository
- * @param {*} owner
- * @param {*} repo
- * @param {*} file_path
- * @param {*} ref
- * @returns {Promise<string[]>} Resolves to the list of files
- */
-async function get_ignore_list(owner, repo, file_path, ref = 'HEAD') {
-  const content = await getFileContent(owner, repo, file_path, ref)
-  const files_to_ignore = content
-    .split('\n')
-    .filter(line => !line.startsWith('#') && line !== '')
-  return files_to_ignore
-}
+  async formatPrChanges() {
+    const diffString = await this.pull_request.getDiffString()
+    const files_to_ignore = await this.getIgnoreList()
 
-function shouldIgnoreFile(filename, files_to_ignore) {
-  // Check if filename matches any pattern in files_to_ignore
-  return files_to_ignore.some(pattern => {
-    // Exact match for files or starts with match for directories
-    return filename === pattern || filename.startsWith(`${pattern}`)
-  })
-}
+    const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
+    let match
+    const changes = []
 
+    while ((match = fileDiffRegex.exec(diffString)) !== null) {
+      const filename = match[1] // Extract filename directly from the regex match
 
-/***/ }),
+      if (this.shouldIgnoreFile(filename, files_to_ignore)) {
+        console.log(`Ignoring file: ${filename}`)
+        continue
+      }
 
-/***/ 1713:
-/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
+      const start = match.index
+      const end = diffString.indexOf('diff --git', start + 1)
+      const fileDiff = diffString.substring(start, end > -1 ? end : undefined)
 
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "run": () => (/* binding */ run)
-/* harmony export */ });
-/* harmony import */ var _helper__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(6989);
+      const lines = fileDiff.split('\n')
+      let codeBeforeChange = ''
+      let codeAfterChange = ''
+      let inChangeBlock = false
 
-
-const core = __nccwpck_require__(2186)
-const github = __nccwpck_require__(5438)
-
-const { parsePR } = __nccwpck_require__(3248)
-const { generateComments } = __nccwpck_require__(9612)
-const { addCommentToPR } = __nccwpck_require__(4975)
-
-/**
- * The main function for the action.
- * @returns {Promise<void>} Resolves when the action is complete.
- */
-async function run() {
-  try {
-    const owner = github.context.payload.pull_request.base.repo.owner.login
-    const repo = github.context.payload.pull_request.base.repo.name
-    const pr_branch_name = github.context.payload.pull_request.head.ref
-
-    const file_paths_to_ignore = await (0,_helper__WEBPACK_IMPORTED_MODULE_0__.get_ignore_list)(
-      owner,
-      repo,
-      '.reviewignore',
-      pr_branch_name
-    )
-    const pr_diff = await parsePR(
-      github.context.payload.pull_request,
-      file_paths_to_ignore
-    )
-
-    const comments_list = await generateComments(pr_diff, file_paths_to_ignore)
-    console.log('PR comments are: ', comments_list)
-
-    const response = await addCommentToPR(
-      github.context.payload.pull_request.base.repo.owner.login,
-      github.context.payload.pull_request.base.repo.name,
-      github.context.payload.pull_request.number,
-      comments_list
-    )
-    console.log('Response is: ', response)
-  } catch (error) {
-    // Fail the workflow run if an error occurs
-    console.error(error)
-    core.setFailed(error.message)
-  }
-}
-
-
-/***/ }),
-
-/***/ 3248:
-/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "parsePR": () => (/* binding */ parsePR)
-/* harmony export */ });
-/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5375);
-/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
-
-
-const { shouldIgnoreFile } = __nccwpck_require__(6989)
-const core = __nccwpck_require__(2186)
-
-const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
-  auth: core.getInput('github-token')
-})
-
-async function getDiffString(owner, repo, pull_number) {
-  console.log('Getting diff for: ', owner, repo, pull_number)
-
-  const response = await octokit.rest.pulls.get({
-    owner,
-    repo,
-    pull_number,
-    mediaType: {
-      format: 'diff'
-    }
-  })
-  return response.data
-}
-
-function parseDiff(diffString, files_to_ignore) {
-  const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
-  let match
-  const changes = []
-
-  while ((match = fileDiffRegex.exec(diffString)) !== null) {
-    const filename = match[1] // Extract filename directly from the regex match
-
-    if (shouldIgnoreFile(filename, files_to_ignore)) {
-      console.log(`Ignoring file: ${filename}`)
-      continue
-    }
-
-    const start = match.index
-    const end = diffString.indexOf('diff --git', start + 1)
-    const fileDiff = diffString.substring(start, end > -1 ? end : undefined)
-
-    const lines = fileDiff.split('\n')
-    let codeBeforeChange = ''
-    let codeAfterChange = ''
-    let inChangeBlock = false
-
-    for (const line of lines) {
-      if (
-        line.startsWith('--- a/') ||
-        line.startsWith('+++ b/') ||
-        line.startsWith('@@')
-      ) {
-        inChangeBlock = true
-      } else if (inChangeBlock) {
-        if (line.startsWith('-')) {
-          codeBeforeChange += `${line.slice(1)}\n`
-        } else if (line.startsWith('+')) {
-          codeAfterChange += `${line.slice(1)}\n`
-        } else {
-          codeBeforeChange += `${line}\n`
-          codeAfterChange += `${line}\n`
+      for (const line of lines) {
+        if (
+          line.startsWith('--- a/') ||
+          line.startsWith('+++ b/') ||
+          line.startsWith('@@')
+        ) {
+          inChangeBlock = true
+        } else if (inChangeBlock) {
+          if (line.startsWith('-')) {
+            codeBeforeChange += `${line.slice(1)}\n`
+          } else if (line.startsWith('+')) {
+            codeAfterChange += `${line.slice(1)}\n`
+          } else {
+            codeBeforeChange += `${line}\n`
+            codeAfterChange += `${line}\n`
+          }
         }
       }
+
+      changes.push({
+        filename,
+        code_before_change: codeBeforeChange,
+        code_after_change: codeAfterChange
+      })
     }
-
-    changes.push({
-      filename,
-      code_before_change: codeBeforeChange,
-      code_after_change: codeAfterChange
-    })
-  }
-
-  return changes
-}
-
-async function parsePR(pullRequest, file_paths_to_ignore) {
-  const owner = pullRequest.base.repo.owner.login
-  const repo = pullRequest.base.repo.name
-  const pull_number = pullRequest.number
-  const diffString = await getDiffString(owner, repo, pull_number)
-  const changes = parseDiff(diffString, file_paths_to_ignore)
-  return {
-    title: pullRequest.title,
-    body: pullRequest.body,
-    changes
+    this.fomatted_changes = changes
   }
 }
+
+module.exports = { AIReviewer }
 
 
 /***/ }),
 
-/***/ 9612:
-/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
+/***/ 2760:
+/***/ ((module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
 // ESM COMPAT FLAG
 __nccwpck_require__.r(__webpack_exports__);
-
-// EXPORTS
-__nccwpck_require__.d(__webpack_exports__, {
-  "generateComments": () => (/* binding */ generateComments)
-});
 
 // NAMESPACE OBJECT: ./node_modules/openai/error.mjs
 var error_namespaceObject = {};
@@ -43116,189 +42811,170 @@ var openai_fileFromPath = fileFromPath;
 })(OpenAI || (OpenAI = {}));
 /* harmony default export */ const openai = (OpenAI);
 //# sourceMappingURL=index.mjs.map
-;// CONCATENATED MODULE: ./src/reviewer.js
+;// CONCATENATED MODULE: ./src/constants.js
+const PROMPT =
+  'You are a software developer and you are given task to review code changes in the PR. ' +
+  'Code changes is given as list of dictionary. ' +
+  'Each dictionary has filename, code snippet before and after change. ' +
+  'Some unchanged common lines are present in both before/after change. ' +
+  'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
+  'Only provide the comments that you are confident about. ' +
+  'Return ONLY list of comments as response: ' +
+  '[{"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}, ' +
+  ' {"path", "path/to/file", "position": line_number on code_after_change, "body": "comment"}]' +
+  'If you have no comments, return an empty list.'
+
+;// CONCATENATED MODULE: ./src/llm_interface.js
+/* module decorator */ module = __nccwpck_require__.hmd(module);
 
 
-const github = __nccwpck_require__(5438)
-const core = __nccwpck_require__(2186)
 
-const { getAllReferences } = __nccwpck_require__(2506)
 
-const OPENAI_KEY = core.getInput('openai-key')
-const reviewer_openai = new openai({
-  apiKey: OPENAI_KEY
-})
+class OpenAIInterface {
+  constructor(api_key) {
+    this.openai = new openai({
+      apiKey: api_key
+    })
+  }
 
-async function getMoreInfo(code_changes) {
-  const prompt =
-    'You are a developer reviewing a Pull request.' +
-    'The code change is a list of dictionary. ' +
-    'Each dictionary has a key called filename which has changed, before_change, and after_change.' +
-    'Return only a list of function names/class/constants that you need more information about to review the code.' +
-    'ONLY include names in project files, not in inbuild/external libraries' +
-    'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'
-
-  const response = await reviewer_openai.chat.completions.create({
-    model: 'gpt-3.5-turbo',
-    messages: [
-      { role: 'system', content: prompt },
-      { role: 'user', content: JSON.stringify(code_changes) }
-    ]
-  })
-  try {
-    const more_info_list = JSON.parse(response.choices[0].message.content)
-    return more_info_list
-  } catch (error) {
-    console.log('Error parsing response from OpenAI: ', response, error)
-    return []
+  async getCommentsonPR(code_changes) {
+    const response = await this.openai.chat.completions.create({
+      model: 'gpt-3.5-turbo',
+      messages: [
+        { role: 'system', content: PROMPT },
+        { role: 'user', content: JSON.stringify(code_changes) }
+      ]
+    })
+    try {
+      const more_info_list = JSON.parse(response.choices[0].message.content)
+      return more_info_list
+    } catch (error) {
+      console.log(
+        'Error parsing response from OpenAI: ',
+        response.choices[0].message.content,
+        error
+      )
+      return []
+    }
   }
 }
 
-/**
- * Generate comments for a code change.
- * @param {object} code_changes The code changes to review.
- * @param {string} openai_key The OpenAI API key.
- * @returns {Promise<object[]>} The list of comments to add to the PR.
- */
-async function generateComments(code_changes, file_paths_to_ignore) {
-  const more_info_list = await getMoreInfo(code_changes)
-  console.log('More information is required on following: ', more_info_list)
-  const pr_file_changes = code_changes.changes
-  const file_paths_to_review = pr_file_changes.map(change => change.filename)
-
-  const pr_branch_name = github.context.payload.pull_request.head.ref
-  const extra_files_context = await getAllReferences(
-    github.context.payload.pull_request.base.repo.owner.login,
-    github.context.payload.pull_request.base.repo.name,
-    pr_branch_name,
-    more_info_list,
-    file_paths_to_review,
-    file_paths_to_ignore
-  )
-
-  const system_prompt =
-    'Act as a developer and review PR changes. Code changes is given as list of dictionary. ' +
-    'Each dictionary has filename, code snippet before and after change. ' +
-    'Some unchanged common lines are present in both before/after change. ' +
-    'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
-    'Only provide the comments that you are confident about. ' +
-    'Extra files are provided for reference, but not to review. ' +
-    'Return ONLY a list of dictionary in format: ' +
-    '[{"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}].' +
-    'If you have no comments, return an empty list.'
-
-  const user_prompt = `Files to review: 
-    ${JSON.stringify(code_changes)} \n
-    Extra files for reference, but not to review:
-    ${JSON.stringify(extra_files_context)}`
-
-  console.log('User prompt is: ', user_prompt)
-
-  const response = await reviewer_openai.chat.completions.create({
-    model: 'gpt-3.5-turbo-16k',
-    messages: [
-      { role: 'system', content: system_prompt },
-      { role: 'user', content: user_prompt }
-    ]
-  })
-
-  console.log('Message from OpenAI is', response.choices[0].message.content)
-  const comments_list = JSON.parse(response.choices[0].message.content)
-  return comments_list
-}
+module.exports = { OpenAIInterface }
 
 
 /***/ }),
 
-/***/ 2506:
+/***/ 1713:
 /***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
 __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "getAllReferences": () => (/* binding */ getAllReferences)
+/* harmony export */   "run": () => (/* binding */ run)
 /* harmony export */ });
-/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(5375);
-/* harmony import */ var _octokit_rest__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_octokit_rest__WEBPACK_IMPORTED_MODULE_0__);
+/* eslint-disable import/extensions */
+const { PullRequest } = __nccwpck_require__(486)
+const { AIReviewer } = __nccwpck_require__(1776)
+const { OpenAIInterface } = __nccwpck_require__(2760)
+
+const core = __nccwpck_require__(2186)
+const github = __nccwpck_require__(5438)
+
+/**
+ * The main function for the action.
+ * @returns {Promise<void>} Resolves when the action is complete.
+ */
+async function run() {
+  try {
+    const pr_context = github.context.payload.pull_request
+    const pull_request = new PullRequest(pr_context)
+    console.log('Pull request is: ', pull_request.pr_branch_name)
+    const reviewer = new AIReviewer(pull_request)
+    await reviewer.formatPrChanges()
+    console.log('Response is: ', reviewer.fomatted_changes)
+
+    const openai_key = core.getInput('openai-key')
+    const openai_interface = new OpenAIInterface(openai_key)
+    const comments_list = openai_interface.getCommentsonPR(
+      reviewer.fomatted_changes
+    )
+    console.log('Comments are: ', comments_list)
+    pull_request.addReview(comments_list)
+  } catch (error) {
+    // Fail the workflow run if an error occurs
+    console.error(error)
+    core.setFailed(error.message)
+  }
+}
 
 
-const { shouldIgnoreFile, getFileContent } = __nccwpck_require__(6989)
+/***/ }),
+
+/***/ 486:
+/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+
+const github = __nccwpck_require__(5438)
 const core = __nccwpck_require__(2186)
 
-const octokit = new _octokit_rest__WEBPACK_IMPORTED_MODULE_0__.Octokit({
-  auth: core.getInput('github-token')
-})
+const GITHUB_TOKEN = core.getInput('github-token')
 
-async function getAllFilePathsInRepo(owner, repo, ref = 'HEAD') {
-  const tree = await octokit.rest.git.getTree({
-    owner,
-    repo,
-    tree_sha: ref,
-    recursive: 'true',
-    headers: {
-      'X-GitHub-Api-Version': '2022-11-28'
-    }
-  })
-  return tree.data.tree
-    .filter(file => file.type === 'blob')
-    .map(file => file.path)
-}
-
-async function getAllReferences(
-  owner,
-  repo,
-  branch_name,
-  list_of_queries,
-  file_paths_to_review,
-  file_paths_to_ignore
-) {
-  const all_file_paths = await getAllFilePathsInRepo(owner, repo, branch_name)
-  console.log('All file paths are: ', all_file_paths)
-  console.log('Files to ignore: ', file_paths_to_ignore)
-  console.log('Files to review: ', file_paths_to_review)
-  const files_to_search = []
-  for (const file of all_file_paths) {
-    if (shouldIgnoreFile(file, file_paths_to_ignore)) {
-      console.log(`Ignoring file: ${file} because it is in the ignore list`)
-      continue
-    }
-    if (file_paths_to_review.includes(file)) {
-      console.log(`File ${file} is in the list of files to review`)
-      continue
-    }
-    files_to_search.push(file)
+class PullRequest {
+  constructor(pr_context) {
+    this.repo_owner = pr_context.base.repo.owner.login
+    this.repo_name = pr_context.base.repo.name
+    this.pr_number = pr_context.number
+    this.pr_branch_name = pr_context.head.ref
+    this.pr_base_branch_name = pr_context.base.ref
+    this.pr_title = pr_context.title
+    this.pr_body = pr_context.body
   }
 
-  console.log('Files to search all queries inside: ', files_to_search)
-
-  const results = []
-  for (const query of list_of_queries) {
-    console.log('Searching for: ', query)
-
-    for (const file_path of files_to_search) {
-      // If file_path already exists in results, skip
-      const file_path_exists = results.some(result => result.path === file_path)
-      if (file_path_exists) continue
-
-      const file_content = await getFileContent(
-        owner,
-        repo,
-        file_path,
-        branch_name
-      )
-      if (file_content.includes(query)) {
-        console.log('Found reference for: ', query, ' in ', file_path)
-        results.push({
-          path: file_path,
-          content: file_content
-        })
-      } else {
-        console.log('No reference found for: ', query, ' in ', file_path)
+  async getDiffString() {
+    const octokit = github.getOctokit(GITHUB_TOKEN)
+    const response = await octokit.rest.pulls.get({
+      owner: this.repo_owner,
+      repo: this.repo_name,
+      pull_number: this.pr_number,
+      mediaType: {
+        format: 'diff'
       }
+    })
+    this.diff_string = response.data
+    return this.diff_string
+  }
+
+  async getFileContent(file_path) {
+    const octokit = github.getOctokit(GITHUB_TOKEN)
+    const response = await octokit.rest.repos.getContent({
+      owner: this.repo_owner,
+      repo: this.repo_name,
+      path: file_path,
+      ref: this.pr_branch_name,
+      mediaType: {
+        format: 'raw'
+      }
+    })
+    return response.data
+  }
+
+  async addReview(list_of_comments) {
+    const octokit = github.getOctokit(GITHUB_TOKEN)
+
+    const response = await octokit.rest.pulls.createReview({
+      owner: this.repo_owner,
+      repo: this.repo_name,
+      pull_number: this.pr_number,
+      event: 'COMMENT',
+      comments: list_of_comments
+    })
+
+    if (response.status !== 200) {
+      throw new Error('Failed to add review')
     }
   }
-  return results
 }
+
+module.exports = { PullRequest }
 
 
 /***/ }),
@@ -45500,8 +45176,8 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			// no module.id needed
-/******/ 			// no module.loaded needed
+/******/ 			id: moduleId,
+/******/ 			loaded: false,
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -45514,6 +45190,9 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
 /******/ 	
+/******/ 		// Flag the module as loaded
+/******/ 		module.loaded = true;
+/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
@@ -45522,18 +45201,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 	__nccwpck_require__.m = __webpack_modules__;
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -45565,6 +45232,21 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		__nccwpck_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
 /******/ 			return "" + chunkId + ".index.js";
+/******/ 		};
+/******/ 	})();
+/******/ 	
+/******/ 	/* webpack/runtime/harmony module decorator */
+/******/ 	(() => {
+/******/ 		__nccwpck_require__.hmd = (module) => {
+/******/ 			module = Object.create(module);
+/******/ 			if (!module.children) module.children = [];
+/******/ 			Object.defineProperty(module, 'exports', {
+/******/ 				enumerable: true,
+/******/ 				set: () => {
+/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
+/******/ 				}
+/******/ 			});
+/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	
