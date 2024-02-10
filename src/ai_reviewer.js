@@ -21,7 +21,7 @@ class AIReviewer {
   }
 
   async formatPrChanges() {
-    const diffString = this.pull_request.getDiffString()
+    const diffString = await this.pull_request.getDiffString()
     const files_to_ignore = await this.getIgnoreList()
 
     const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
