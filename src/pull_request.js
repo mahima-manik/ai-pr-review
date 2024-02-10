@@ -16,7 +16,10 @@ class PullRequest {
     const response = await octokit.rest.pulls.get({
       owner: this.repo_owner,
       repo: this.repo_name,
-      pull_number: this.pr_number
+      pull_number: this.pr_number,
+      mediaType: {
+        format: 'diff'
+      }
     })
     this.diff_string = response.data
     return this.diff_string
@@ -28,7 +31,10 @@ class PullRequest {
       owner: this.repo_owner,
       repo: this.repo_name,
       path: file_path,
-      ref: this.pr_branch_name
+      ref: this.pr_branch_name,
+      mediaType: {
+        format: 'raw'
+      }
     })
     return response.data
   }
