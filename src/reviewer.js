@@ -60,7 +60,8 @@ export async function generateComments(code_changes, file_paths_to_ignore) {
   )
 
   const system_prompt =
-    'Act as a developer and review PR changes. Code changes is given as list of dictionary. ' +
+    'You are a software developer and you are given task to review code changes in the PR. ' +
+    'Code changes is given as list of dictionary. ' +
     'Each dictionary has filename, code snippet before and after change. ' +
     'Some unchanged common lines are present in both before/after change. ' +
     'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
@@ -88,6 +89,6 @@ export async function generateComments(code_changes, file_paths_to_ignore) {
   })
 
   console.log('Message from OpenAI is', response.choices[0].message.content)
-  const comments_json_list = JSON.parse(response.choices[0].message.content)
-  return list(comments_json_list.values())
+  const comments_list = JSON.parse(response.choices[0].message.content)
+  return comments_list
 }
