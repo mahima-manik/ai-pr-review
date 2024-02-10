@@ -29016,7 +29016,7 @@ async function run() {
     const pull_request = new PullRequest(pr_context)
     console.log('Pull request is: ', pull_request.pr_branch_name)
     const reviewer = new AIReviewer(pull_request)
-    reviewer.formatPrChanges()
+    await reviewer.formatPrChanges()
 
     console.log('Response is: ', reviewer.fomatted_changes)
   } catch (error) {
