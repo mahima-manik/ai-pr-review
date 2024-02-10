@@ -68,4 +68,4 @@ class AIReviewer {
   }
 }
 
-module.exports = { AIReviewer }
+export default AIReviewer

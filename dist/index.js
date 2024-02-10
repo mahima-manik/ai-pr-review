@@ -29019,9 +29019,16 @@ function wrappy (fn, cb) {
 /***/ }),
 
 /***/ 7273:
-/***/ ((module, __unused_webpack___webpack_exports__, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
+// ESM COMPAT FLAG
+__nccwpck_require__.r(__webpack_exports__);
+
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "default": () => (/* binding */ ai_reviewer)
+});
 
 // EXTERNAL MODULE: ./node_modules/@octokit/rest/dist-node/index.js
 var dist_node = __nccwpck_require__(5375);
@@ -29081,7 +29088,6 @@ function shouldIgnoreFile(filename, files_to_ignore) {
 }
 
 ;// CONCATENATED MODULE: ./src/ai_reviewer.js
-/* module decorator */ module = __nccwpck_require__.hmd(module);
 
 
 class AIReviewer {
@@ -29152,7 +29158,7 @@ class AIReviewer {
   }
 }
 
-module.exports = { AIReviewer }
+/* harmony default export */ const ai_reviewer = (AIReviewer);
 
 
 /***/ }),
@@ -29165,11 +29171,8 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
 /* harmony export */   "run": () => (/* binding */ run)
 /* harmony export */ });
-/* harmony import */ var _pull_request__WEBPACK_IMPORTED_MODULE_0__ = __nccwpck_require__(486);
-/* harmony import */ var _pull_request__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__nccwpck_require__.n(_pull_request__WEBPACK_IMPORTED_MODULE_0__);
-/* harmony import */ var _ai_reviewer__WEBPACK_IMPORTED_MODULE_1__ = __nccwpck_require__(7273);
-
-
+const PullRequest = __nccwpck_require__(486)
+const AIReviewer = __nccwpck_require__(7273)
 
 const core = __nccwpck_require__(2186)
 const github = __nccwpck_require__(5438)
@@ -29180,8 +29183,8 @@ const github = __nccwpck_require__(5438)
  */
 async function run() {
   try {
-    const pull_request = new _pull_request__WEBPACK_IMPORTED_MODULE_0__.PullRequest(github.context.payload.pull_request)
-    const reviewer = new _ai_reviewer__WEBPACK_IMPORTED_MODULE_1__/* .AIReviewer */ .m(pull_request)
+    const pull_request = new PullRequest(github.context.payload.pull_request)
+    const reviewer = new AIReviewer(pull_request)
     reviewer.formatPrChanges()
 
     console.log('Response is: ', reviewer.fomatted_changes)
@@ -29196,8 +29199,13 @@ async function run() {
 /***/ }),
 
 /***/ 486:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
+"use strict";
+__nccwpck_require__.r(__webpack_exports__);
+/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 const github = __nccwpck_require__(5438)
 
 class PullRequest {
@@ -29250,7 +29258,7 @@ class PullRequest {
   }
 }
 
-module.exports = { PullRequest }
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (PullRequest);
 
 
 /***/ }),
@@ -31120,8 +31128,8 @@ module.exports = parseParams
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -31134,26 +31142,11 @@ module.exports = parseParams
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
 /******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
-/******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
 /******/ 	}
 /******/ 	
 /************************************************************************/
-/******/ 	/* webpack/runtime/compat get default export */
-/******/ 	(() => {
-/******/ 		// getDefaultExport function for compatibility with non-harmony modules
-/******/ 		__nccwpck_require__.n = (module) => {
-/******/ 			var getter = module && module.__esModule ?
-/******/ 				() => (module['default']) :
-/******/ 				() => (module);
-/******/ 			__nccwpck_require__.d(getter, { a: getter });
-/******/ 			return getter;
-/******/ 		};
-/******/ 	})();
-/******/ 	
 /******/ 	/* webpack/runtime/define property getters */
 /******/ 	(() => {
 /******/ 		// define getter functions for harmony exports
@@ -31163,21 +31156,6 @@ module.exports = parseParams
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/harmony module decorator */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.hmd = (module) => {
-/******/ 			module = Object.create(module);
-/******/ 			if (!module.children) module.children = [];
-/******/ 			Object.defineProperty(module, 'exports', {
-/******/ 				enumerable: true,
-/******/ 				set: () => {
-/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
-/******/ 				}
-/******/ 			});
-/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	

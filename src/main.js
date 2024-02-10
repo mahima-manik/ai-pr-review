@@ -1,5 +1,5 @@
-import { PullRequest } from './pull_request'
-import { AIReviewer } from './ai_reviewer'
+const PullRequest = require('./pull_request')
+const AIReviewer = require('./ai_reviewer')
 
 const core = require('@actions/core')
 const github = require('@actions/github')

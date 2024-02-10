@@ -50,4 +50,4 @@ class PullRequest {
   }
 }
 
-module.exports = { PullRequest }
+export default PullRequest
