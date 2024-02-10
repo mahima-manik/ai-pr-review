@@ -1,6 +1,3 @@
-// eslint-disable-next-line import/extensions
-import { shouldIgnoreFile } from './helper.js'
-
 class AIReviewer {
   constructor(pull_request) {
     this.pull_request = pull_request
@@ -15,6 +12,14 @@ class AIReviewer {
     return files_to_ignore
   }
 
+  shouldIgnoreFile(filename, files_to_ignore) {
+    // Check if filename matches any pattern in files_to_ignore
+    return files_to_ignore.some(pattern => {
+      // Exact match for files or starts with match for directories
+      return filename === pattern || filename.startsWith(`${pattern}`)
+    })
+  }
+
   async formatPrChanges() {
     const diffString = this.pull_request.getDiffString()
     const files_to_ignore = await this.getIgnoreList()
@@ -26,7 +31,7 @@ class AIReviewer {
     while ((match = fileDiffRegex.exec(diffString)) !== null) {
       const filename = match[1] // Extract filename directly from the regex match
 
-      if (shouldIgnoreFile(filename, files_to_ignore)) {
+      if (this.shouldIgnoreFile(filename, files_to_ignore)) {
         console.log(`Ignoring file: ${filename}`)
         continue
       }

@@ -1,6 +1,6 @@
 /* eslint-disable import/extensions */
-const PullRequest = require('./pull_request.js').PullRequest
-// const AIReviewer = require('./ai_reviewer.js')
+const { PullRequest } = require('./pull_request.js')
+const { AIReviewer } = require('./ai_reviewer.js')
 
 const core = require('@actions/core')
 const github = require('@actions/github')
@@ -11,12 +11,13 @@ const github = require('@actions/github')
  */
 export async function run() {
   try {
-    const pull_request = new PullRequest(github.context.payload.pull_request)
+    const pr_context = github.context.payload.pull_request
+    const pull_request = new PullRequest(pr_context)
     console.log('Pull request is: ', pull_request.pr_branch_name)
-    // const reviewer = new AIReviewer(pull_request)
-    // reviewer.formatPrChanges()
+    const reviewer = new AIReviewer(pull_request)
+    reviewer.formatPrChanges()
 
-    // console.log('Response is: ', reviewer.fomatted_changes)
+    console.log('Response is: ', reviewer.fomatted_changes)
   } catch (error) {
     // Fail the workflow run if an error occurs
     console.error(error)
