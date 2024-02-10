@@ -1,4 +1,5 @@
-import { shouldIgnoreFile } from './helper'
+// eslint-disable-next-line import/extensions
+import { shouldIgnoreFile } from './helper.js'
 
 class AIReviewer {
   constructor(pull_request) {

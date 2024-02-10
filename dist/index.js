@@ -3282,66 +3282,6 @@ paginateRest.VERSION = VERSION;
 
 /***/ }),
 
-/***/ 8883:
-/***/ ((module) => {
-
-"use strict";
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
-  requestLog: () => requestLog
-});
-module.exports = __toCommonJS(dist_src_exports);
-
-// pkg/dist-src/version.js
-var VERSION = "4.0.0";
-
-// pkg/dist-src/index.js
-function requestLog(octokit) {
-  octokit.hook.wrap("request", (request, options) => {
-    octokit.log.debug("request", options);
-    const start = Date.now();
-    const requestOptions = octokit.request.endpoint.parse(options);
-    const path = requestOptions.url.replace(options.baseUrl, "");
-    return request(options).then((response) => {
-      octokit.log.info(
-        `${requestOptions.method} ${path} - ${response.status} in ${Date.now() - start}ms`
-      );
-      return response;
-    }).catch((error) => {
-      octokit.log.info(
-        `${requestOptions.method} ${path} - ${error.status} in ${Date.now() - start}ms`
-      );
-      throw error;
-    });
-  });
-}
-requestLog.VERSION = VERSION;
-// Annotate the CommonJS export names for ESM import in node:
-0 && (0);
-
-
-/***/ }),
-
 /***/ 3044:
 /***/ ((module) => {
 
@@ -5767,57 +5707,6 @@ var request = withDefaults(import_endpoint.endpoint, {
   headers: {
     "user-agent": `octokit-request.js/${VERSION} ${(0, import_universal_user_agent.getUserAgent)()}`
   }
-});
-// Annotate the CommonJS export names for ESM import in node:
-0 && (0);
-
-
-/***/ }),
-
-/***/ 5375:
-/***/ ((module, __unused_webpack_exports, __nccwpck_require__) => {
-
-"use strict";
-
-var __defProp = Object.defineProperty;
-var __getOwnPropDesc = Object.getOwnPropertyDescriptor;
-var __getOwnPropNames = Object.getOwnPropertyNames;
-var __hasOwnProp = Object.prototype.hasOwnProperty;
-var __export = (target, all) => {
-  for (var name in all)
-    __defProp(target, name, { get: all[name], enumerable: true });
-};
-var __copyProps = (to, from, except, desc) => {
-  if (from && typeof from === "object" || typeof from === "function") {
-    for (let key of __getOwnPropNames(from))
-      if (!__hasOwnProp.call(to, key) && key !== except)
-        __defProp(to, key, { get: () => from[key], enumerable: !(desc = __getOwnPropDesc(from, key)) || desc.enumerable });
-  }
-  return to;
-};
-var __toCommonJS = (mod) => __copyProps(__defProp({}, "__esModule", { value: true }), mod);
-
-// pkg/dist-src/index.js
-var dist_src_exports = {};
-__export(dist_src_exports, {
-  Octokit: () => Octokit
-});
-module.exports = __toCommonJS(dist_src_exports);
-var import_core = __nccwpck_require__(6762);
-var import_plugin_request_log = __nccwpck_require__(8883);
-var import_plugin_paginate_rest = __nccwpck_require__(4193);
-var import_plugin_rest_endpoint_methods = __nccwpck_require__(3044);
-
-// pkg/dist-src/version.js
-var VERSION = "20.0.2";
-
-// pkg/dist-src/index.js
-var Octokit = import_core.Octokit.plugin(
-  import_plugin_request_log.requestLog,
-  import_plugin_rest_endpoint_methods.legacyRestEndpointMethods,
-  import_plugin_paginate_rest.paginateRest
-).defaults({
-  userAgent: `octokit-rest.js/${VERSION}`
 });
 // Annotate the CommonJS export names for ESM import in node:
 0 && (0);
@@ -29018,147 +28907,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 7273:
-/***/ ((module, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-// ESM COMPAT FLAG
-__nccwpck_require__.r(__webpack_exports__);
-
-// EXTERNAL MODULE: ./node_modules/@octokit/rest/dist-node/index.js
-var dist_node = __nccwpck_require__(5375);
-;// CONCATENATED MODULE: ./src/helper.js
-
-const core = __nccwpck_require__(2186)
-
-const octokit = new dist_node.Octokit({
-  auth: core.getInput('github-token')
-})
-
-async function getFileContent(owner, repo, file_path, ref = 'HEAD') {
-  try {
-    const response = await octokit.rest.repos.getContent({
-      owner,
-      repo,
-      path: file_path,
-      ref,
-      headers: {
-        'X-GitHub-Api-Version': '2022-11-28'
-      },
-      mediaType: {
-        format: 'raw'
-      }
-    })
-
-    const content = response.data
-    return content
-  } catch (error) {
-    console.log(error)
-    return ''
-  }
-}
-
-/**
- * Get the list of files to ignore from the .reviewignore file in the repository
- * @param {*} owner
- * @param {*} repo
- * @param {*} file_path
- * @param {*} ref
- * @returns {Promise<string[]>} Resolves to the list of files
- */
-async function get_ignore_list(owner, repo, file_path, ref = 'HEAD') {
-  const content = await getFileContent(owner, repo, file_path, ref)
-  const files_to_ignore = content
-    .split('\n')
-    .filter(line => !line.startsWith('#') && line !== '')
-  return files_to_ignore
-}
-
-function shouldIgnoreFile(filename, files_to_ignore) {
-  // Check if filename matches any pattern in files_to_ignore
-  return files_to_ignore.some(pattern => {
-    // Exact match for files or starts with match for directories
-    return filename === pattern || filename.startsWith(`${pattern}`)
-  })
-}
-
-;// CONCATENATED MODULE: ./src/ai_reviewer.js
-/* module decorator */ module = __nccwpck_require__.hmd(module);
-
-
-class AIReviewer {
-  constructor(pull_request) {
-    this.pull_request = pull_request
-    this.fomatted_changes = []
-  }
-
-  async getIgnoreList() {
-    const content = await this.pull_request.getFileContent('.reviewignore')
-    const files_to_ignore = content
-      .split('\n')
-      .filter(line => !line.startsWith('#') && line !== '')
-    return files_to_ignore
-  }
-
-  async formatPrChanges() {
-    const diffString = this.pull_request.getDiffString()
-    const files_to_ignore = await this.getIgnoreList()
-
-    const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
-    let match
-    const changes = []
-
-    while ((match = fileDiffRegex.exec(diffString)) !== null) {
-      const filename = match[1] // Extract filename directly from the regex match
-
-      if (shouldIgnoreFile(filename, files_to_ignore)) {
-        console.log(`Ignoring file: ${filename}`)
-        continue
-      }
-
-      const start = match.index
-      const end = diffString.indexOf('diff --git', start + 1)
-      const fileDiff = diffString.substring(start, end > -1 ? end : undefined)
-
-      const lines = fileDiff.split('\n')
-      let codeBeforeChange = ''
-      let codeAfterChange = ''
-      let inChangeBlock = false
-
-      for (const line of lines) {
-        if (
-          line.startsWith('--- a/') ||
-          line.startsWith('+++ b/') ||
-          line.startsWith('@@')
-        ) {
-          inChangeBlock = true
-        } else if (inChangeBlock) {
-          if (line.startsWith('-')) {
-            codeBeforeChange += `${line.slice(1)}\n`
-          } else if (line.startsWith('+')) {
-            codeAfterChange += `${line.slice(1)}\n`
-          } else {
-            codeBeforeChange += `${line}\n`
-            codeAfterChange += `${line}\n`
-          }
-        }
-      }
-
-      changes.push({
-        filename,
-        code_before_change: codeBeforeChange,
-        code_after_change: codeAfterChange
-      })
-    }
-    this.fomatted_changes = changes
-  }
-}
-
-module.exports = { AIReviewer }
-
-
-/***/ }),
-
 /***/ 1713:
 /***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
@@ -29169,7 +28917,7 @@ __nccwpck_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* eslint-disable import/extensions */
 const PullRequest = (__nccwpck_require__(486).PullRequest)
-const AIReviewer = __nccwpck_require__(7273)
+// const AIReviewer = require('./ai_reviewer.js')
 
 const core = __nccwpck_require__(2186)
 const github = __nccwpck_require__(5438)
@@ -29181,10 +28929,11 @@ const github = __nccwpck_require__(5438)
 async function run() {
   try {
     const pull_request = new PullRequest(github.context.payload.pull_request)
-    const reviewer = new AIReviewer(pull_request)
-    reviewer.formatPrChanges()
+    console.log('Pull request is: ', pull_request.pr_branch_name)
+    // const reviewer = new AIReviewer(pull_request)
+    // reviewer.formatPrChanges()
 
-    console.log('Response is: ', reviewer.fomatted_changes)
+    // console.log('Response is: ', reviewer.fomatted_changes)
   } catch (error) {
     // Fail the workflow run if an error occurs
     console.error(error)
@@ -31120,8 +30869,8 @@ module.exports = parseParams
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -31133,9 +30882,6 @@ module.exports = parseParams
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
-/******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -31151,21 +30897,6 @@ module.exports = parseParams
 /******/ 					Object.defineProperty(exports, key, { enumerable: true, get: definition[key] });
 /******/ 				}
 /******/ 			}
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/harmony module decorator */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.hmd = (module) => {
-/******/ 			module = Object.create(module);
-/******/ 			if (!module.children) module.children = [];
-/******/ 			Object.defineProperty(module, 'exports', {
-/******/ 				enumerable: true,
-/******/ 				set: () => {
-/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
-/******/ 				}
-/******/ 			});
-/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	
