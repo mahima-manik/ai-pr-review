@@ -1,5 +1,7 @@
 import OpenAI from 'openai'
 
+import { PROMPT_FOR_PR_REVIEW } from './constants'
+
 class OpenAIInterface {
   constructor(api_key) {
     this.openai = new OpenAI({
@@ -13,8 +15,7 @@ class OpenAIInterface {
       messages: [
         {
           role: 'system',
-          content:
-            'Review the PR code and return your comments ONLY as list of dict. Each dict should contain path, position and body'
+          content: PROMPT_FOR_PR_REVIEW
         },
         { role: 'user', content: JSON.stringify(code_changes) }
       ]

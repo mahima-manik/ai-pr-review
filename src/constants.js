@@ -17,3 +17,5 @@ const PROMPT_FOR_MORE_INFO =
   'Return only a list of function names/class/constants that you need more information about to review the code.' +
   'ONLY include names in project files, not in inbuild/external libraries' +
   'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'
+
+export { PROMPT_FOR_PR_REVIEW, PROMPT_FOR_MORE_INFO }
