@@ -1,6 +1,6 @@
 import OpenAI from 'openai'
 
-import { PROMPT } from './constants'
+import { PROMPT_FOR_PR_REVIEW } from './constants'
 
 class OpenAIInterface {
   constructor(api_key) {
@@ -13,7 +13,10 @@ class OpenAIInterface {
     const response = await this.openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: PROMPT },
+        {
+          role: 'system',
+          content: PROMPT_FOR_PR_REVIEW
+        },
         { role: 'user', content: JSON.stringify(code_changes) }
       ]
     })
@@ -31,4 +34,4 @@ class OpenAIInterface {
   }
 }
 
-module.exports = { OpenAIInterface }
+export { OpenAIInterface }

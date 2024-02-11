@@ -38887,11 +38887,16 @@ module.exports = { AIReviewer }
 /***/ }),
 
 /***/ 2760:
-/***/ ((module, __webpack_exports__, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
 // ESM COMPAT FLAG
 __nccwpck_require__.r(__webpack_exports__);
+
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "OpenAIInterface": () => (/* binding */ OpenAIInterface)
+});
 
 // NAMESPACE OBJECT: ./node_modules/openai/error.mjs
 var error_namespaceObject = {};
@@ -42812,7 +42817,7 @@ var openai_fileFromPath = fileFromPath;
 /* harmony default export */ const openai = (OpenAI);
 //# sourceMappingURL=index.mjs.map
 ;// CONCATENATED MODULE: ./src/constants.js
-const PROMPT =
+const PROMPT_FOR_PR_REVIEW =
   'You are a software developer and you are given task to review code changes in the PR. ' +
   'Code changes is given as list of dictionary. ' +
   'Each dictionary has filename, code snippet before and after change. ' +
@@ -42824,8 +42829,17 @@ const PROMPT =
   ' {"path", "path/to/file", "position": line_number on code_after_change, "body": "comment"}]' +
   'If you have no comments, return an empty list.'
 
+const PROMPT_FOR_MORE_INFO =
+  (/* unused pure expression or super */ null && ('You are a developer reviewing a Pull request.' +
+  'The code change is a list of dictionary. ' +
+  'Each dictionary has a key called filename which has changed, before_change, and after_change.' +
+  'Return only a list of function names/class/constants that you need more information about to review the code.' +
+  'ONLY include names in project files, not in inbuild/external libraries' +
+  'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'))
+
+
+
 ;// CONCATENATED MODULE: ./src/llm_interface.js
-/* module decorator */ module = __nccwpck_require__.hmd(module);
 
 
 
@@ -42841,7 +42855,10 @@ class OpenAIInterface {
     const response = await this.openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: PROMPT },
+        {
+          role: 'system',
+          content: PROMPT_FOR_PR_REVIEW
+        },
         { role: 'user', content: JSON.stringify(code_changes) }
       ]
     })
@@ -42859,7 +42876,7 @@ class OpenAIInterface {
   }
 }
 
-module.exports = { OpenAIInterface }
+
 
 
 /***/ }),
@@ -42889,13 +42906,14 @@ async function run() {
     const pr_context = github.context.payload.pull_request
     const pull_request = new PullRequest(pr_context)
     console.log('Pull request is: ', pull_request.pr_branch_name)
+
     const reviewer = new AIReviewer(pull_request)
     await reviewer.formatPrChanges()
     console.log('Response is: ', reviewer.fomatted_changes)
 
     const openai_key = core.getInput('openai-key')
     const openai_interface = new OpenAIInterface(openai_key)
-    const comments_list = openai_interface.getCommentsonPR(
+    const comments_list = await openai_interface.getCommentsonPR(
       reviewer.fomatted_changes
     )
     console.log('Comments are: ', comments_list)
@@ -45176,8 +45194,8 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -45189,9 +45207,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
-/******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -45232,21 +45247,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		__nccwpck_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
 /******/ 			return "" + chunkId + ".index.js";
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/harmony module decorator */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.hmd = (module) => {
-/******/ 			module = Object.create(module);
-/******/ 			if (!module.children) module.children = [];
-/******/ 			Object.defineProperty(module, 'exports', {
-/******/ 				enumerable: true,
-/******/ 				set: () => {
-/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
-/******/ 				}
-/******/ 			});
-/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	
