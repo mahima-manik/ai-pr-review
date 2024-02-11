@@ -38873,8 +38873,8 @@ class AIReviewer {
 
       changes.push({
         filename,
-        code_before_change: codeBeforeChange,
-        code_after_change: codeAfterChange
+        before_change: codeBeforeChange,
+        after_change: codeAfterChange
       })
     }
     this.fomatted_changes = changes
@@ -38886,7 +38886,7 @@ module.exports = { AIReviewer }
 
 /***/ }),
 
-/***/ 2760:
+/***/ 3337:
 /***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
@@ -38895,7 +38895,7 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
-  "OpenAIInterface": () => (/* binding */ OpenAIInterface)
+  "run": () => (/* binding */ run)
 });
 
 // NAMESPACE OBJECT: ./node_modules/openai/error.mjs
@@ -38917,6 +38917,10 @@ __nccwpck_require__.d(error_namespaceObject, {
   "UnprocessableEntityError": () => (UnprocessableEntityError)
 });
 
+// EXTERNAL MODULE: ./src/pull_request.js
+var src_pull_request = __nccwpck_require__(486);
+// EXTERNAL MODULE: ./src/ai_reviewer.js
+var ai_reviewer = __nccwpck_require__(1776);
 ;// CONCATENATED MODULE: ./node_modules/openai/version.mjs
 const VERSION = '4.24.1'; // x-release-please-version
 //# sourceMappingURL=version.mjs.map
@@ -42818,16 +42822,13 @@ var openai_fileFromPath = fileFromPath;
 //# sourceMappingURL=index.mjs.map
 ;// CONCATENATED MODULE: ./src/constants.js
 const PROMPT_FOR_PR_REVIEW =
-  'You are a software developer and you are given task to review code changes in the PR. ' +
-  'Code changes is given as list of dictionary. ' +
-  'Each dictionary has filename, code snippet before and after change. ' +
-  'Some unchanged common lines are present in both before/after change. ' +
-  'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
-  'Only provide the comments that you are confident about. ' +
-  'Return ONLY list of comments as response: ' +
-  '[{"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}, ' +
-  ' {"path", "path/to/file", "position": line_number on code_after_change, "body": "comment"}]' +
-  'If you have no comments, return an empty list.'
+  'You are developer reviewing Github PR. Changes are gives as list of dictionary where each dict contains file_path, before_change, after_change code snippet. ' +
+  ' - Review the code in after_change based on code in before_change for improvements, correctness, design, clean code, security, performance and other best practices.' +
+  ' - Provide code for suggested change in your comment, if necessary' +
+  ' - Some unchanged code maybe present in both before/after change. ' +
+  ' - Only provide the comments that you are confident about' +
+  ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
+  ' Example response: [{“path": "path/to/file", "position": line_number on after_change, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
   (/* unused pure expression or super */ null && ('You are a developer reviewing a Pull request.' +
@@ -42878,24 +42879,15 @@ class OpenAIInterface {
 
 
 
+;// CONCATENATED MODULE: ./src/main.js
 
-/***/ }),
 
-/***/ 1713:
-/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "run": () => (/* binding */ run)
-/* harmony export */ });
-/* eslint-disable import/extensions */
-const { PullRequest } = __nccwpck_require__(486)
-const { AIReviewer } = __nccwpck_require__(1776)
-const { OpenAIInterface } = __nccwpck_require__(2760)
 
 const core = __nccwpck_require__(2186)
 const github = __nccwpck_require__(5438)
+
+const OPENAI_KEY = core.getInput('openai-key')
 
 /**
  * The main function for the action.
@@ -42904,15 +42896,14 @@ const github = __nccwpck_require__(5438)
 async function run() {
   try {
     const pr_context = github.context.payload.pull_request
-    const pull_request = new PullRequest(pr_context)
+    const pull_request = new src_pull_request.PullRequest(pr_context)
     console.log('Pull request is: ', pull_request.pr_branch_name)
 
-    const reviewer = new AIReviewer(pull_request)
+    const reviewer = new ai_reviewer.AIReviewer(pull_request)
     await reviewer.formatPrChanges()
     console.log('Response is: ', reviewer.fomatted_changes)
 
-    const openai_key = core.getInput('openai-key')
-    const openai_interface = new OpenAIInterface(openai_key)
+    const openai_interface = new OpenAIInterface(OPENAI_KEY)
     const comments_list = await openai_interface.getCommentsonPR(
       reviewer.fomatted_changes
     )
@@ -45319,7 +45310,7 @@ var __webpack_exports__ = {};
 /**
  * The entrypoint for the action.
  */
-const { run } = __nccwpck_require__(1713)
+const { run } = __nccwpck_require__(3337)
 
 run()
 
