@@ -33,4 +33,4 @@ class OpenAIInterface {
   }
 }
 
-module.exports = { OpenAIInterface }
+export { OpenAIInterface }

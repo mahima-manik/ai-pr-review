@@ -38887,11 +38887,16 @@ module.exports = { AIReviewer }
 /***/ }),
 
 /***/ 8128:
-/***/ ((module, __webpack_exports__, __nccwpck_require__) => {
+/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
 // ESM COMPAT FLAG
 __nccwpck_require__.r(__webpack_exports__);
+
+// EXPORTS
+__nccwpck_require__.d(__webpack_exports__, {
+  "OpenAIInterface": () => (/* binding */ OpenAIInterface)
+});
 
 // NAMESPACE OBJECT: ./node_modules/openai/error.mjs
 var error_namespaceObject = {};
@@ -42812,7 +42817,6 @@ var openai_fileFromPath = fileFromPath;
 /* harmony default export */ const openai = (OpenAI);
 //# sourceMappingURL=index.mjs.map
 ;// CONCATENATED MODULE: ./src/llm_interface.js
-/* module decorator */ module = __nccwpck_require__.hmd(module);
 
 
 class OpenAIInterface {
@@ -42848,7 +42852,7 @@ class OpenAIInterface {
   }
 }
 
-module.exports = { OpenAIInterface }
+
 
 
 /***/ }),
@@ -45166,8 +45170,8 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		}
 /******/ 		// Create a new module (and put it into the cache)
 /******/ 		var module = __webpack_module_cache__[moduleId] = {
-/******/ 			id: moduleId,
-/******/ 			loaded: false,
+/******/ 			// no module.id needed
+/******/ 			// no module.loaded needed
 /******/ 			exports: {}
 /******/ 		};
 /******/ 	
@@ -45179,9 +45183,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		} finally {
 /******/ 			if(threw) delete __webpack_module_cache__[moduleId];
 /******/ 		}
-/******/ 	
-/******/ 		// Flag the module as loaded
-/******/ 		module.loaded = true;
 /******/ 	
 /******/ 		// Return the exports of the module
 /******/ 		return module.exports;
@@ -45222,21 +45223,6 @@ module.exports = JSON.parse('[[[0,44],"disallowed_STD3_valid"],[[45,46],"valid"]
 /******/ 		__nccwpck_require__.u = (chunkId) => {
 /******/ 			// return url for filenames based on template
 /******/ 			return "" + chunkId + ".index.js";
-/******/ 		};
-/******/ 	})();
-/******/ 	
-/******/ 	/* webpack/runtime/harmony module decorator */
-/******/ 	(() => {
-/******/ 		__nccwpck_require__.hmd = (module) => {
-/******/ 			module = Object.create(module);
-/******/ 			if (!module.children) module.children = [];
-/******/ 			Object.defineProperty(module, 'exports', {
-/******/ 				enumerable: true,
-/******/ 				set: () => {
-/******/ 					throw new Error('ES Modules may not assign module.exports or exports.*, Use ESM export syntax, instead: ' + module.id);
-/******/ 				}
-/******/ 			});
-/******/ 			return module;
 /******/ 		};
 /******/ 	})();
 /******/ 	
