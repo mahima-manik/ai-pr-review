@@ -38886,7 +38886,7 @@ module.exports = { AIReviewer }
 
 /***/ }),
 
-/***/ 2760:
+/***/ 3337:
 /***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
 "use strict";
@@ -38895,7 +38895,7 @@ __nccwpck_require__.r(__webpack_exports__);
 
 // EXPORTS
 __nccwpck_require__.d(__webpack_exports__, {
-  "OpenAIInterface": () => (/* binding */ OpenAIInterface)
+  "run": () => (/* binding */ run)
 });
 
 // NAMESPACE OBJECT: ./node_modules/openai/error.mjs
@@ -38917,6 +38917,10 @@ __nccwpck_require__.d(error_namespaceObject, {
   "UnprocessableEntityError": () => (UnprocessableEntityError)
 });
 
+// EXTERNAL MODULE: ./src/pull_request.js
+var src_pull_request = __nccwpck_require__(486);
+// EXTERNAL MODULE: ./src/ai_reviewer.js
+var ai_reviewer = __nccwpck_require__(1776);
 ;// CONCATENATED MODULE: ./node_modules/openai/version.mjs
 const VERSION = '4.24.1'; // x-release-please-version
 //# sourceMappingURL=version.mjs.map
@@ -42878,21 +42882,11 @@ class OpenAIInterface {
 
 
 
-
-/***/ }),
-
-/***/ 1713:
-/***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
-
-"use strict";
-__nccwpck_require__.r(__webpack_exports__);
-/* harmony export */ __nccwpck_require__.d(__webpack_exports__, {
-/* harmony export */   "run": () => (/* binding */ run)
-/* harmony export */ });
+;// CONCATENATED MODULE: ./src/main.js
 /* eslint-disable import/extensions */
-const { PullRequest } = __nccwpck_require__(486)
-const { AIReviewer } = __nccwpck_require__(1776)
-const { OpenAIInterface } = __nccwpck_require__(2760)
+
+
+
 
 const core = __nccwpck_require__(2186)
 const github = __nccwpck_require__(5438)
@@ -42904,10 +42898,10 @@ const github = __nccwpck_require__(5438)
 async function run() {
   try {
     const pr_context = github.context.payload.pull_request
-    const pull_request = new PullRequest(pr_context)
+    const pull_request = new src_pull_request.PullRequest(pr_context)
     console.log('Pull request is: ', pull_request.pr_branch_name)
 
-    const reviewer = new AIReviewer(pull_request)
+    const reviewer = new ai_reviewer.AIReviewer(pull_request)
     await reviewer.formatPrChanges()
     console.log('Response is: ', reviewer.fomatted_changes)
 
@@ -45319,7 +45313,7 @@ var __webpack_exports__ = {};
 /**
  * The entrypoint for the action.
  */
-const { run } = __nccwpck_require__(1713)
+const { run } = __nccwpck_require__(3337)
 
 run()
 
