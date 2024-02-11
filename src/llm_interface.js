@@ -1,7 +1,5 @@
 import OpenAI from 'openai'
 
-import { PROMPT } from './constants'
-
 class OpenAIInterface {
   constructor(api_key) {
     this.openai = new OpenAI({
@@ -13,7 +11,11 @@ class OpenAIInterface {
     const response = await this.openai.chat.completions.create({
       model: 'gpt-3.5-turbo',
       messages: [
-        { role: 'system', content: PROMPT },
+        {
+          role: 'system',
+          content:
+            'Review the PR code and return your comments ONLY as list of dict. Each dict should contain path, position and body'
+        },
         { role: 'user', content: JSON.stringify(code_changes) }
       ]
     })

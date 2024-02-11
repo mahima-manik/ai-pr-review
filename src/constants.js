@@ -1,4 +1,4 @@
-export const PROMPT =
+const PROMPT =
   'You are a software developer and you are given task to review code changes in the PR. ' +
   'Code changes is given as list of dictionary. ' +
   'Each dictionary has filename, code snippet before and after change. ' +
