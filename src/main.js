@@ -1,7 +1,7 @@
 /* eslint-disable import/extensions */
 const { PullRequest } = require('./pull_request.js')
 const { AIReviewer } = require('./ai_reviewer.js')
-const { OpenAIInterface } = require('./openai_interface.js')
+const { OpenAIInterface } = require('./llm_interface.js')
 
 const core = require('@actions/core')
 const github = require('@actions/github')
