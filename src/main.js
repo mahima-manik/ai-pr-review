@@ -22,7 +22,7 @@ export async function run() {
 
     const openai_key = core.getInput('openai-key')
     const openai_interface = new OpenAIInterface(openai_key)
-    const comments_list = openai_interface.getCommentsonPR(
+    const comments_list = await openai_interface.getCommentsonPR(
       reviewer.fomatted_changes
     )
     console.log('Comments are: ', comments_list)
