@@ -38873,8 +38873,8 @@ class AIReviewer {
 
       changes.push({
         filename,
-        code_before_change: codeBeforeChange,
-        code_after_change: codeAfterChange
+        before_change: codeBeforeChange,
+        after_change: codeAfterChange
       })
     }
     this.fomatted_changes = changes
@@ -42822,16 +42822,13 @@ var openai_fileFromPath = fileFromPath;
 //# sourceMappingURL=index.mjs.map
 ;// CONCATENATED MODULE: ./src/constants.js
 const PROMPT_FOR_PR_REVIEW =
-  'You are a software developer and you are given task to review code changes in the PR. ' +
-  'Code changes is given as list of dictionary. ' +
-  'Each dictionary has filename, code snippet before and after change. ' +
-  'Some unchanged common lines are present in both before/after change. ' +
-  'Review the changes for improvements, correctness, design, clean code, security, performance and other best practices.' +
-  'Only provide the comments that you are confident about. ' +
-  'Return ONLY list of comments as response: ' +
-  '[{"path": "path/to/file", "position": line_number on code_after_change, "body": "comment"}, ' +
-  ' {"path", "path/to/file", "position": line_number on code_after_change, "body": "comment"}]' +
-  'If you have no comments, return an empty list.'
+  'You are developer reviewing Github PR. Changes are gives as list of dictionary where each dict contains file_path, before_change, after_change code snippet. ' +
+  ' - Review the code in after_change based on code in before_change for improvements, correctness, design, clean code, security, performance and other best practices.' +
+  ' - Provide code for suggested change in your comment, if necessary' +
+  ' - Some unchanged code maybe present in both before/after change. ' +
+  ' - Only provide the comments that you are confident about' +
+  ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
+  ' Example response: [{“path": "path/to/file", "position": line_number on after_change, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
   (/* unused pure expression or super */ null && ('You are a developer reviewing a Pull request.' +
@@ -42883,13 +42880,14 @@ class OpenAIInterface {
 
 
 ;// CONCATENATED MODULE: ./src/main.js
-/* eslint-disable import/extensions */
 
 
 
 
 const core = __nccwpck_require__(2186)
 const github = __nccwpck_require__(5438)
+
+const OPENAI_KEY = core.getInput('openai-key')
 
 /**
  * The main function for the action.
@@ -42905,8 +42903,7 @@ async function run() {
     await reviewer.formatPrChanges()
     console.log('Response is: ', reviewer.fomatted_changes)
 
-    const openai_key = core.getInput('openai-key')
-    const openai_interface = new OpenAIInterface(openai_key)
+    const openai_interface = new OpenAIInterface(OPENAI_KEY)
     const comments_list = await openai_interface.getCommentsonPR(
       reviewer.fomatted_changes
     )

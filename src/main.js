@@ -1,10 +1,11 @@
-/* eslint-disable import/extensions */
 import { PullRequest } from './pull_request'
 import { AIReviewer } from './ai_reviewer'
 import { OpenAIInterface } from './llm_interface'
 
 const core = require('@actions/core')
 const github = require('@actions/github')
+
+const OPENAI_KEY = core.getInput('openai-key')
 
 /**
  * The main function for the action.
@@ -20,8 +21,7 @@ export async function run() {
     await reviewer.formatPrChanges()
     console.log('Response is: ', reviewer.fomatted_changes)
 
-    const openai_key = core.getInput('openai-key')
-    const openai_interface = new OpenAIInterface(openai_key)
+    const openai_interface = new OpenAIInterface(OPENAI_KEY)
     const comments_list = await openai_interface.getCommentsonPR(
       reviewer.fomatted_changes
     )

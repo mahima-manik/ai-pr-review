@@ -66,8 +66,8 @@ class AIReviewer {
 
       changes.push({
         filename,
-        code_before_change: codeBeforeChange,
-        code_after_change: codeAfterChange
+        before_change: codeBeforeChange,
+        after_change: codeAfterChange
       })
     }
     this.fomatted_changes = changes
