@@ -1,5 +1,4 @@
 import { PullRequest } from './pull_request'
-import { AIReviewer } from './ai_reviewer'
 import { OpenAIInterface } from './llm_interface'
 
 const core = require('@actions/core')
@@ -15,15 +14,11 @@ export async function run() {
   try {
     const pr_context = github.context.payload.pull_request
     const pull_request = new PullRequest(pr_context)
-    console.log('Pull request is: ', pull_request.pr_branch_name)
-
-    const reviewer = new AIReviewer(pull_request)
-    await reviewer.formatPrChanges()
-    console.log('Response is: ', reviewer.fomatted_changes)
+    await pull_request.getDiffString()
 
     const openai_interface = new OpenAIInterface(OPENAI_KEY)
     const comments_list = await openai_interface.getCommentsonPR(
-      reviewer.fomatted_changes
+      pull_request.diff_string
     )
     console.log('Comments are: ', comments_list)
     pull_request.addReview(comments_list)

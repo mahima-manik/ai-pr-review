@@ -17,7 +17,7 @@ class OpenAIInterface {
           role: 'system',
           content: PROMPT_FOR_PR_REVIEW
         },
-        { role: 'user', content: JSON.stringify(code_changes) }
+        { role: 'user', content: code_changes }
       ]
     })
     try {

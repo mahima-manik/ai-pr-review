@@ -38802,90 +38802,6 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
-/***/ 1776:
-/***/ ((module) => {
-
-class AIReviewer {
-  constructor(pull_request) {
-    this.pull_request = pull_request
-    this.fomatted_changes = []
-  }
-
-  async getIgnoreList() {
-    const content = await this.pull_request.getFileContent('.reviewignore')
-    const files_to_ignore = content
-      .split('\n')
-      .filter(line => !line.startsWith('#') && line !== '')
-    return files_to_ignore
-  }
-
-  shouldIgnoreFile(filename, files_to_ignore) {
-    // Check if filename matches any pattern in files_to_ignore
-    return files_to_ignore.some(pattern => {
-      // Exact match for files or starts with match for directories
-      return filename === pattern || filename.startsWith(`${pattern}`)
-    })
-  }
-
-  async formatPrChanges() {
-    const diffString = await this.pull_request.getDiffString()
-    const files_to_ignore = await this.getIgnoreList()
-
-    const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
-    let match
-    const changes = []
-
-    while ((match = fileDiffRegex.exec(diffString)) !== null) {
-      const filename = match[1] // Extract filename directly from the regex match
-
-      if (this.shouldIgnoreFile(filename, files_to_ignore)) {
-        console.log(`Ignoring file: ${filename}`)
-        continue
-      }
-
-      const start = match.index
-      const end = diffString.indexOf('diff --git', start + 1)
-      const fileDiff = diffString.substring(start, end > -1 ? end : undefined)
-
-      const lines = fileDiff.split('\n')
-      let codeBeforeChange = ''
-      let codeAfterChange = ''
-      let inChangeBlock = false
-
-      for (const line of lines) {
-        if (
-          line.startsWith('--- a/') ||
-          line.startsWith('+++ b/') ||
-          line.startsWith('@@')
-        ) {
-          inChangeBlock = true
-        } else if (inChangeBlock) {
-          if (line.startsWith('-')) {
-            codeBeforeChange += `${line.slice(1)}\n`
-          } else if (line.startsWith('+')) {
-            codeAfterChange += `${line.slice(1)}\n`
-          } else {
-            codeBeforeChange += `${line}\n`
-            codeAfterChange += `${line}\n`
-          }
-        }
-      }
-
-      changes.push({
-        filename,
-        before_change: codeBeforeChange,
-        after_change: codeAfterChange
-      })
-    }
-    this.fomatted_changes = changes
-  }
-}
-
-module.exports = { AIReviewer }
-
-
-/***/ }),
-
 /***/ 3337:
 /***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
@@ -38919,8 +38835,6 @@ __nccwpck_require__.d(error_namespaceObject, {
 
 // EXTERNAL MODULE: ./src/pull_request.js
 var src_pull_request = __nccwpck_require__(486);
-// EXTERNAL MODULE: ./src/ai_reviewer.js
-var ai_reviewer = __nccwpck_require__(1776);
 ;// CONCATENATED MODULE: ./node_modules/openai/version.mjs
 const VERSION = '4.24.1'; // x-release-please-version
 //# sourceMappingURL=version.mjs.map
@@ -42822,13 +42736,12 @@ var openai_fileFromPath = fileFromPath;
 //# sourceMappingURL=index.mjs.map
 ;// CONCATENATED MODULE: ./src/constants.js
 const PROMPT_FOR_PR_REVIEW =
-  'You are developer reviewing Github PR. Changes are gives as list of dictionary where each dict contains file_path, before_change, after_change code snippet. ' +
-  ' - Review the code in after_change based on code in before_change for improvements, correctness, design, clean code, security, performance and other best practices.' +
+  'You are developer reviewing Github PR. Changes are gives in Github .diff format. ' +
+  ' - Review the code for improvements, correctness, design, clean code, security, performance and other best practices.' +
   ' - Provide code for suggested change in your comment, if necessary' +
-  ' - Some unchanged code maybe present in both before/after change. ' +
   ' - Only provide the comments that you are confident about' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
-  ' Example response: [{“path": "path/to/file", "position": line_number on after_change, "body": "comment"}, ...]'
+  ' Example response: [{“path": "path/to/file", "position": line_number on modified code, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
   (/* unused pure expression or super */ null && ('You are a developer reviewing a Pull request.' +
@@ -42860,7 +42773,7 @@ class OpenAIInterface {
           role: 'system',
           content: PROMPT_FOR_PR_REVIEW
         },
-        { role: 'user', content: JSON.stringify(code_changes) }
+        { role: 'user', content: code_changes }
       ]
     })
     try {
@@ -42883,7 +42796,6 @@ class OpenAIInterface {
 
 
 
-
 const core = __nccwpck_require__(2186)
 const github = __nccwpck_require__(5438)
 
@@ -42897,15 +42809,11 @@ async function run() {
   try {
     const pr_context = github.context.payload.pull_request
     const pull_request = new src_pull_request.PullRequest(pr_context)
-    console.log('Pull request is: ', pull_request.pr_branch_name)
-
-    const reviewer = new ai_reviewer.AIReviewer(pull_request)
-    await reviewer.formatPrChanges()
-    console.log('Response is: ', reviewer.fomatted_changes)
+    await pull_request.getDiffString()
 
     const openai_interface = new OpenAIInterface(OPENAI_KEY)
     const comments_list = await openai_interface.getCommentsonPR(
-      reviewer.fomatted_changes
+      pull_request.diff_string
     )
     console.log('Comments are: ', comments_list)
     pull_request.addReview(comments_list)
