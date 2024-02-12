@@ -67,7 +67,7 @@
     "@actions/github": "^6.0.0",
     "@octokit/core": "^5.0.2",
     "@octokit/rest": "^20.0.2",
-    "openai": "^4.24.1"
+    "openai": "^4.27.0"
   },
   "devDependencies": {
     "@babel/core": "^7.23.7",
