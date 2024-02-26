@@ -23,6 +23,7 @@ class OpenAIInterface {
       ]
     })
     try {
+      console.log('Response from OpenAI: ', response.choices[0].message.content)
       const more_info_list = JSON.parse(response.choices[0].message.content)
       return more_info_list
     } catch (error) {

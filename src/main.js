@@ -20,7 +20,7 @@ export async function run() {
     const reviewer = new AIReviewer(pull_request)
     await reviewer.formatPrChanges()
 
-    console.log('Response is: ', reviewer.fomatted_changes)
+    console.log('Formatted changes are: ', reviewer.fomatted_changes)
 
     const openai_interface = new OpenAIInterface(OPENAI_KEY)
     const comments_list = await openai_interface.getCommentsonPR({
