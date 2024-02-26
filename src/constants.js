@@ -1,9 +1,10 @@
 const PROMPT_FOR_PR_REVIEW =
-  'You are developer reviewing Github PR. Changes are gives in Github .diff format. ' +
-  ' - Review the code for improvements, correctness, design, clean code, security, performance and other best practices.' +
-  ' - Provide code for suggested change in your comment, if necessary' +
-  ' - Only provide the comments that you are confident about' +
+  'You are reviewing PR on Github as a developer. Input contains PR title, description and list of changes.' +
+  ' - Review the code changes carefully. Look for potential bugs, edge cases, or logic errors' +
+  ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
+  ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
+  ' - Position in the file should be in terms on new line added.' +
   ' Example response: [{“path": "path/to/file", "position": line_number on modified code, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =

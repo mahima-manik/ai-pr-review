@@ -38802,6 +38802,75 @@ function wrappy (fn, cb) {
 
 /***/ }),
 
+/***/ 1776:
+/***/ ((module) => {
+
+class AIReviewer {
+  constructor(pull_request) {
+    this.pull_request = pull_request
+    this.fomatted_changes = []
+  }
+
+  async getIgnoreList() {
+    const content = await this.pull_request.getFileContent('.reviewignore')
+    const files_to_ignore = content
+      .split('\n')
+      .filter(line => !line.startsWith('#') && line !== '')
+    return files_to_ignore
+  }
+
+  shouldIgnoreFile(filename, files_to_ignore) {
+    // Check if filename matches any pattern in files_to_ignore
+    return files_to_ignore.some(pattern => {
+      // Exact match for files or starts with match for directories
+      return filename === pattern || filename.startsWith(`${pattern}`)
+    })
+  }
+
+  async formatPrChanges() {
+    const raw_diff_string = await this.pull_request.getDiffString()
+    const files_to_ignore = await this.getIgnoreList()
+    const diff_lines = raw_diff_string.split('\n')
+    // Remove the file and its diff from raw_diff_string if it is in files_to_ignore
+    let current_file = ''
+    let current_diff = []
+    this.fomatted_changes = []
+
+    for (const line of diff_lines) {
+      if (line.startsWith('diff --git')) {
+        if (
+          current_file !== '' &&
+          !this.shouldIgnoreFile(current_file, files_to_ignore)
+        ) {
+          this.fomatted_changes.push({
+            filename: current_file,
+            diff: current_diff
+          })
+        }
+        current_file = line.split(' b/')[1]
+        current_diff = []
+      }
+      current_diff.push(line)
+    }
+    // Add the last file
+    if (
+      current_file !== '' &&
+      !this.shouldIgnoreFile(current_file, files_to_ignore)
+    ) {
+      this.fomatted_changes.push({
+        filename: current_file,
+        diff: current_diff
+      })
+    }
+    return this.fomatted_changes
+  }
+}
+
+module.exports = { AIReviewer }
+
+
+/***/ }),
+
 /***/ 3337:
 /***/ ((__unused_webpack_module, __webpack_exports__, __nccwpck_require__) => {
 
@@ -42736,11 +42805,12 @@ var openai_fileFromPath = fileFromPath;
 //# sourceMappingURL=index.mjs.map
 ;// CONCATENATED MODULE: ./src/constants.js
 const PROMPT_FOR_PR_REVIEW =
-  'You are developer reviewing Github PR. Changes are gives in Github .diff format. ' +
-  ' - Review the code for improvements, correctness, design, clean code, security, performance and other best practices.' +
-  ' - Provide code for suggested change in your comment, if necessary' +
-  ' - Only provide the comments that you are confident about' +
+  'You are reviewing PR on Github as a developer. Input contains PR title, description and list of changes.' +
+  ' - Review the code changes carefully. Look for potential bugs, edge cases, or logic errors' +
+  ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
+  ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
+  ' - Position in the file should be in terms on new line added.' +
   ' Example response: [{“path": "path/to/file", "position": line_number on modified code, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
@@ -42759,6 +42829,8 @@ const PROMPT_FOR_MORE_INFO =
 
 
 class OpenAIInterface {
+  GPT_MODEL = 'gpt-3.5-turbo'
+
   constructor(api_key) {
     this.openai = new openai({
       apiKey: api_key
@@ -42767,13 +42839,13 @@ class OpenAIInterface {
 
   async getCommentsonPR(code_changes) {
     const response = await this.openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: this.GPT_MODEL,
       messages: [
         {
           role: 'system',
           content: PROMPT_FOR_PR_REVIEW
         },
-        { role: 'user', content: code_changes }
+        { role: 'user', content: JSON.stringify(code_changes) }
       ]
     })
     try {
@@ -42792,7 +42864,10 @@ class OpenAIInterface {
 
 
 
+// EXTERNAL MODULE: ./src/ai_reviewer.js
+var ai_reviewer = __nccwpck_require__(1776);
 ;// CONCATENATED MODULE: ./src/main.js
+
 
 
 
@@ -42811,10 +42886,17 @@ async function run() {
     const pull_request = new src_pull_request.PullRequest(pr_context)
     await pull_request.getDiffString()
 
+    const reviewer = new ai_reviewer.AIReviewer(pull_request)
+    await reviewer.formatPrChanges()
+
+    console.log('Response is: ', reviewer.fomatted_changes)
+
     const openai_interface = new OpenAIInterface(OPENAI_KEY)
-    const comments_list = await openai_interface.getCommentsonPR(
-      pull_request.diff_string
-    )
+    const comments_list = await openai_interface.getCommentsonPR({
+      title: pr_context.title,
+      description: pr_context.body,
+      changes: reviewer.fomatted_changes
+    })
     console.log('Comments are: ', comments_list)
     pull_request.addReview(comments_list)
   } catch (error) {

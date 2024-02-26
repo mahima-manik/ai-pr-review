@@ -3,6 +3,8 @@ import OpenAI from 'openai'
 import { PROMPT_FOR_PR_REVIEW } from './constants'
 
 class OpenAIInterface {
+  GPT_MODEL = 'gpt-3.5-turbo'
+
   constructor(api_key) {
     this.openai = new OpenAI({
       apiKey: api_key
@@ -11,13 +13,13 @@ class OpenAIInterface {
 
   async getCommentsonPR(code_changes) {
     const response = await this.openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: this.GPT_MODEL,
       messages: [
         {
           role: 'system',
           content: PROMPT_FOR_PR_REVIEW
         },
-        { role: 'user', content: code_changes }
+        { role: 'user', content: JSON.stringify(code_changes) }
       ]
     })
     try {
