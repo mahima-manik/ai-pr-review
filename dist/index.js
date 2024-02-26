@@ -38828,56 +38828,41 @@ class AIReviewer {
   }
 
   async formatPrChanges() {
-    const diffString = await this.pull_request.getDiffString()
+    const raw_diff_string = await this.pull_request.getDiffString()
     const files_to_ignore = await this.getIgnoreList()
+    const diff_lines = raw_diff_string.split('\n')
+    // Remove the file and its diff from raw_diff_string if it is in files_to_ignore
+    let current_file = ''
+    let current_diff = []
+    this.fomatted_changes = []
 
-    const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
-    let match
-    const changes = []
-
-    while ((match = fileDiffRegex.exec(diffString)) !== null) {
-      const filename = match[1] // Extract filename directly from the regex match
-
-      if (this.shouldIgnoreFile(filename, files_to_ignore)) {
-        console.log(`Ignoring file: ${filename}`)
-        continue
-      }
-
-      const start = match.index
-      const end = diffString.indexOf('diff --git', start + 1)
-      const fileDiff = diffString.substring(start, end > -1 ? end : undefined)
-
-      const lines = fileDiff.split('\n')
-      let codeBeforeChange = ''
-      let codeAfterChange = ''
-      let inChangeBlock = false
-
-      for (const line of lines) {
+    for (const line of diff_lines) {
+      if (line.startsWith('diff --git')) {
         if (
-          line.startsWith('--- a/') ||
-          line.startsWith('+++ b/') ||
-          line.startsWith('@@')
+          current_file !== '' &&
+          !this.shouldIgnoreFile(current_file, files_to_ignore)
         ) {
-          inChangeBlock = true
-        } else if (inChangeBlock) {
-          if (line.startsWith('-')) {
-            codeBeforeChange += `${line.slice(1)}\n`
-          } else if (line.startsWith('+')) {
-            codeAfterChange += `${line.slice(1)}\n`
-          } else {
-            codeBeforeChange += `${line}\n`
-            codeAfterChange += `${line}\n`
-          }
+          this.fomatted_changes.push({
+            filename: current_file,
+            diff: current_diff
+          })
         }
+        current_file = line.split(' b/')[1]
+        current_diff = []
       }
-
-      changes.push({
-        filename,
-        before_change: codeBeforeChange,
-        after_change: codeAfterChange
+      current_diff.push(line)
+    }
+    // Add the last file
+    if (
+      current_file !== '' &&
+      !this.shouldIgnoreFile(current_file, files_to_ignore)
+    ) {
+      this.fomatted_changes.push({
+        filename: current_file,
+        diff: current_diff
       })
     }
-    this.fomatted_changes = changes
+    return this.fomatted_changes
   }
 }
 
@@ -38919,8 +38904,6 @@ __nccwpck_require__.d(error_namespaceObject, {
 
 // EXTERNAL MODULE: ./src/pull_request.js
 var src_pull_request = __nccwpck_require__(486);
-// EXTERNAL MODULE: ./src/ai_reviewer.js
-var ai_reviewer = __nccwpck_require__(1776);
 ;// CONCATENATED MODULE: ./node_modules/openai/version.mjs
 const VERSION = '4.24.1'; // x-release-please-version
 //# sourceMappingURL=version.mjs.map
@@ -42822,13 +42805,13 @@ var openai_fileFromPath = fileFromPath;
 //# sourceMappingURL=index.mjs.map
 ;// CONCATENATED MODULE: ./src/constants.js
 const PROMPT_FOR_PR_REVIEW =
-  'You are developer reviewing Github PR. Changes are gives as list of dictionary where each dict contains file_path, before_change, after_change code snippet. ' +
-  ' - Review the code in after_change based on code in before_change for improvements, correctness, design, clean code, security, performance and other best practices.' +
-  ' - Provide code for suggested change in your comment, if necessary' +
-  ' - Some unchanged code maybe present in both before/after change. ' +
-  ' - Only provide the comments that you are confident about' +
+  'You are reviewing PR on Github as a developer. Input contains PR title, description and list of changes.' +
+  ' - Review the code changes carefully. Look for potential bugs, edge cases, or logic errors' +
+  ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
+  ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
-  ' Example response: [{“path": "path/to/file", "position": line_number on after_change, "body": "comment"}, ...]'
+  ' - Position should be counted only in terms on new line added which start with + sign' +
+  ' Example response: [{"path": "path/to/file", "position": line_number on modified code, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
   (/* unused pure expression or super */ null && ('You are a developer reviewing a Pull request.' +
@@ -42846,6 +42829,8 @@ const PROMPT_FOR_MORE_INFO =
 
 
 class OpenAIInterface {
+  GPT_MODEL = 'gpt-3.5-turbo'
+
   constructor(api_key) {
     this.openai = new openai({
       apiKey: api_key
@@ -42854,7 +42839,7 @@ class OpenAIInterface {
 
   async getCommentsonPR(code_changes) {
     const response = await this.openai.chat.completions.create({
-      model: 'gpt-3.5-turbo',
+      model: this.GPT_MODEL,
       messages: [
         {
           role: 'system',
@@ -42864,6 +42849,7 @@ class OpenAIInterface {
       ]
     })
     try {
+      console.log('Response from OpenAI: ', response.choices[0].message.content)
       const more_info_list = JSON.parse(response.choices[0].message.content)
       return more_info_list
     } catch (error) {
@@ -42879,6 +42865,8 @@ class OpenAIInterface {
 
 
 
+// EXTERNAL MODULE: ./src/ai_reviewer.js
+var ai_reviewer = __nccwpck_require__(1776);
 ;// CONCATENATED MODULE: ./src/main.js
 
 
@@ -42897,16 +42885,19 @@ async function run() {
   try {
     const pr_context = github.context.payload.pull_request
     const pull_request = new src_pull_request.PullRequest(pr_context)
-    console.log('Pull request is: ', pull_request.pr_branch_name)
+    await pull_request.getDiffString()
 
     const reviewer = new ai_reviewer.AIReviewer(pull_request)
     await reviewer.formatPrChanges()
-    console.log('Response is: ', reviewer.fomatted_changes)
+
+    console.log('Formatted changes are: ', reviewer.fomatted_changes)
 
     const openai_interface = new OpenAIInterface(OPENAI_KEY)
-    const comments_list = await openai_interface.getCommentsonPR(
-      reviewer.fomatted_changes
-    )
+    const comments_list = await openai_interface.getCommentsonPR({
+      title: pr_context.title,
+      description: pr_context.body,
+      changes: reviewer.fomatted_changes
+    })
     console.log('Comments are: ', comments_list)
     pull_request.addReview(comments_list)
   } catch (error) {

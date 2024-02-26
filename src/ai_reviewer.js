@@ -21,56 +21,41 @@ class AIReviewer {
   }
 
   async formatPrChanges() {
-    const diffString = await this.pull_request.getDiffString()
+    const raw_diff_string = await this.pull_request.getDiffString()
     const files_to_ignore = await this.getIgnoreList()
+    const diff_lines = raw_diff_string.split('\n')
+    // Remove the file and its diff from raw_diff_string if it is in files_to_ignore
+    let current_file = ''
+    let current_diff = []
+    this.fomatted_changes = []
 
-    const fileDiffRegex = /^diff --git a\/(.+?) b\/\1\nindex/gm
-    let match
-    const changes = []
-
-    while ((match = fileDiffRegex.exec(diffString)) !== null) {
-      const filename = match[1] // Extract filename directly from the regex match
-
-      if (this.shouldIgnoreFile(filename, files_to_ignore)) {
-        console.log(`Ignoring file: ${filename}`)
-        continue
-      }
-
-      const start = match.index
-      const end = diffString.indexOf('diff --git', start + 1)
-      const fileDiff = diffString.substring(start, end > -1 ? end : undefined)
-
-      const lines = fileDiff.split('\n')
-      let codeBeforeChange = ''
-      let codeAfterChange = ''
-      let inChangeBlock = false
-
-      for (const line of lines) {
+    for (const line of diff_lines) {
+      if (line.startsWith('diff --git')) {
         if (
-          line.startsWith('--- a/') ||
-          line.startsWith('+++ b/') ||
-          line.startsWith('@@')
+          current_file !== '' &&
+          !this.shouldIgnoreFile(current_file, files_to_ignore)
         ) {
-          inChangeBlock = true
-        } else if (inChangeBlock) {
-          if (line.startsWith('-')) {
-            codeBeforeChange += `${line.slice(1)}\n`
-          } else if (line.startsWith('+')) {
-            codeAfterChange += `${line.slice(1)}\n`
-          } else {
-            codeBeforeChange += `${line}\n`
-            codeAfterChange += `${line}\n`
-          }
+          this.fomatted_changes.push({
+            filename: current_file,
+            diff: current_diff
+          })
         }
+        current_file = line.split(' b/')[1]
+        current_diff = []
       }
-
-      changes.push({
-        filename,
-        before_change: codeBeforeChange,
-        after_change: codeAfterChange
+      current_diff.push(line)
+    }
+    // Add the last file
+    if (
+      current_file !== '' &&
+      !this.shouldIgnoreFile(current_file, files_to_ignore)
+    ) {
+      this.fomatted_changes.push({
+        filename: current_file,
+        diff: current_diff
       })
     }
-    this.fomatted_changes = changes
+    return this.fomatted_changes
   }
 }
 
