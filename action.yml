@@ -1,6 +1,10 @@
 name: 'AI PR review'
-description: 'AI PR review'
+description: 'Github action to review PRs using OpenAI'
 author: 'mahima-manik'
+
+branding:
+  icon: 'check-circle'
+  color: 'green'
 
 # Expected inputs for the action
 inputs:
