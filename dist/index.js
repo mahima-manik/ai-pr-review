@@ -42960,6 +42960,11 @@ class PullRequest {
   async addReview(list_of_comments) {
     const octokit = github.getOctokit(GITHUB_TOKEN)
 
+    if (list_of_comments.length === 0) {
+      console.log('No comments to add')
+      return
+    }
+
     const response = await octokit.rest.pulls.createReview({
       owner: this.repo_owner,
       repo: this.repo_name,
