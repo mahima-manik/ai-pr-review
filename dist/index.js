@@ -42810,8 +42810,8 @@ const PROMPT_FOR_PR_REVIEW =
   ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
-  ' - Position should be counted only in terms on new line added which start with + sign' +
-  ' Example response: [{"path": "path/to/file", "position": line_number on modified code, "body": "comment"}, ...]'
+  ' - Position value equals the number of lines down from the first "@@" hunk header, starting with 1, in the file you want to add a comment.' +
+  ' Example response: [{"path": "path/to/file", "position": line number, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
   (/* unused pure expression or super */ null && ('You are a developer reviewing a Pull request.' +
@@ -42959,6 +42959,11 @@ class PullRequest {
 
   async addReview(list_of_comments) {
     const octokit = github.getOctokit(GITHUB_TOKEN)
+
+    if (list_of_comments.length === 0) {
+      console.log('No comments to add')
+      return
+    }
 
     const response = await octokit.rest.pulls.createReview({
       owner: this.repo_owner,
