@@ -42810,8 +42810,8 @@ const PROMPT_FOR_PR_REVIEW =
   ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
-  ' - Position should be in terms on new line added which start with + sign' +
-  ' Example response: [{“path": "path/to/file", "position": line_number on modified code, "body": "comment"}, ...]'
+  ' - Position should be counted only in terms on new line added which start with + sign' +
+  ' Example response: [{"path": "path/to/file", "position": line_number on modified code, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
   (/* unused pure expression or super */ null && ('You are a developer reviewing a Pull request.' +
