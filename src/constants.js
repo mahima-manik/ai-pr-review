@@ -15,4 +15,15 @@ const PROMPT_FOR_MORE_INFO =
   'ONLY include names in project files, not in inbuild/external libraries' +
   'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'
 
-export { PROMPT_FOR_PR_REVIEW, PROMPT_FOR_MORE_INFO }
+class ModelNames {
+  static GPT_3_5_TURBO = 'gpt-3.5-turbo'
+  static GPT_3_5_TURBO_16K = 'gpt-3.5-turbo-16k'
+  static GPT_4 = 'gpt-4'
+  static GPT_4_32K = 'gpt-4-32k'
+
+  isModelValid(model) {
+    return Object.values(ModelNames).includes(model)
+  }
+}
+
+export { PROMPT_FOR_PR_REVIEW, PROMPT_FOR_MORE_INFO, ModelNames }

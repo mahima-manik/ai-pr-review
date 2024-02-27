@@ -14,6 +14,10 @@ inputs:
   github-token:
     description: 'Github token'
     required: true
+  gpt-model:
+    description: 'Model to use for review'
+    required: false
+    default: 'gpt-3.5-turbo'
 
 runs:
   using: node20

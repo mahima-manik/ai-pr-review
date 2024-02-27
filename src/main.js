@@ -6,6 +6,7 @@ const core = require('@actions/core')
 const github = require('@actions/github')
 
 const OPENAI_KEY = core.getInput('openai-key')
+const GPT_MODEL = core.getInput('gpt-model')
 
 /**
  * The main function for the action.
@@ -13,6 +14,7 @@ const OPENAI_KEY = core.getInput('openai-key')
  */
 export async function run() {
   try {
+    console.log('Starting PR review action with GPT model: ', GPT_MODEL)
     const pr_context = github.context.payload.pull_request
     const pull_request = new PullRequest(pr_context)
     await pull_request.getDiffString()
@@ -22,7 +24,7 @@ export async function run() {
 
     console.log('Formatted changes are: ', reviewer.fomatted_changes)
 
-    const openai_interface = new OpenAIInterface(OPENAI_KEY)
+    const openai_interface = new OpenAIInterface(OPENAI_KEY, GPT_MODEL)
     const comments_list = await openai_interface.getCommentsonPR({
       title: pr_context.title,
       description: pr_context.body,
