@@ -42811,6 +42811,7 @@ const PROMPT_FOR_PR_REVIEW =
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
   ' - Position value equals the number of lines down from the first "@@" hunk header, starting with 1, in the file you want to add a comment.' +
+  ' The position in the diff continues to increase through lines of whitespace and additional hunks until the beginning of a new file.' +
   ' Example response: [{"path": "path/to/file", "position": line number, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
@@ -42983,16 +42984,16 @@ class PullRequest {
   async addReview(list_of_comments) {
     const octokit = github.getOctokit(GITHUB_TOKEN)
 
+    let event_name = 'COMMENT'
     if (list_of_comments.length === 0) {
-      console.log('No comments to add')
-      return
+      event_name = 'APPROVE'
     }
 
     const response = await octokit.rest.pulls.createReview({
       owner: this.repo_owner,
       repo: this.repo_name,
       pull_number: this.pr_number,
-      event: 'COMMENT',
+      event: event_name,
       comments: list_of_comments
     })
 

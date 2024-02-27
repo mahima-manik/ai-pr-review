@@ -5,6 +5,7 @@ const PROMPT_FOR_PR_REVIEW =
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
   ' - Position value equals the number of lines down from the first "@@" hunk header, starting with 1, in the file you want to add a comment.' +
+  ' The position in the diff continues to increase through lines of whitespace and additional hunks until the beginning of a new file.' +
   ' Example response: [{"path": "path/to/file", "position": line number, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
