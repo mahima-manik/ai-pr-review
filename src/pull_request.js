@@ -44,8 +44,9 @@ class PullRequest {
 
   async addReview(list_of_comments) {
     const octokit = github.getOctokit(GITHUB_TOKEN)
-
     let event_name = 'COMMENT'
+
+    // If there are no comments, approve the PR
     if (list_of_comments.length === 0) {
       event_name = 'APPROVE'
     }

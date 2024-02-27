@@ -42808,6 +42808,7 @@ const PROMPT_FOR_PR_REVIEW =
   'You are reviewing PR on Github as a developer. Input contains PR title, description and list of changes.' +
   ' - Review the code changes carefully. Look for potential bugs, edge cases, or logic errors' +
   ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
+  ' - You can provide code for suggested change in your comment.' +
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
   ' - Position value equals the number of lines down from the first "@@" hunk header, starting with 1, in the file you want to add a comment.' +
@@ -42823,18 +42824,14 @@ const PROMPT_FOR_MORE_INFO =
   'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'))
 
 class ModelNames {
-  static GPT_3_5_TURBO = 'gpt-3.5-turbo'
-  static GPT_3_5_TURBO_16K = 'gpt-3.5-turbo-16k'
-  static GPT_4 = 'gpt-4'
-  static GPT_4_32K = 'gpt-4-32k'
-
-  static isModelValid(model) {
-    return (
-      model === ModelNames.GPT_3_5_TURBO ||
-      model === ModelNames.GPT_3_5_TURBO_16K ||
-      model === ModelNames.GPT_4 ||
-      model === ModelNames.GPT_4_32K
-    )
+  static models = {
+    GPT_3_5_TURBO: 'gpt-3.5-turbo',
+    GPT_3_5_TURBO_16K: 'gpt-3.5-turbo-16k',
+    GPT_4: 'gpt-4',
+    GPT_4_32K: 'gpt-4-32k'
+  }
+  static isModelValid(model_name) {
+    return ModelNames.models.has(model_name)
   }
 }
 
@@ -42851,7 +42848,11 @@ class OpenAIInterface {
       throw new Error('OpenAI API key is required')
     }
     if (!ModelNames.isModelValid(gpt_model)) {
-      throw new Error(`Invalid GPT model name: ${gpt_model}`)
+      throw new Error(
+        `Invalid GPT model name: ${gpt_model}. Valid models are: ${Object.values(
+          ModelNames.models
+        )}`
+      )
     }
     this.gpt_model = gpt_model
     this.openai = new openai({
@@ -42983,8 +42984,9 @@ class PullRequest {
 
   async addReview(list_of_comments) {
     const octokit = github.getOctokit(GITHUB_TOKEN)
-
     let event_name = 'COMMENT'
+
+    // If there are no comments, approve the PR
     if (list_of_comments.length === 0) {
       event_name = 'APPROVE'
     }

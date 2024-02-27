@@ -8,7 +8,11 @@ class OpenAIInterface {
       throw new Error('OpenAI API key is required')
     }
     if (!ModelNames.isModelValid(gpt_model)) {
-      throw new Error(`Invalid GPT model name: ${gpt_model}`)
+      throw new Error(
+        `Invalid GPT model name: ${gpt_model}. Valid models are: ${Object.values(
+          ModelNames.models
+        )}`
+      )
     }
     this.gpt_model = gpt_model
     this.openai = new OpenAI({
