@@ -42811,6 +42811,7 @@ const PROMPT_FOR_PR_REVIEW =
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
   ' - Position value equals the number of lines down from the first "@@" hunk header, starting with 1, in the file you want to add a comment.' +
+  ' The position in the diff continues to increase through lines of whitespace and additional hunks until the beginning of a new file.' +
   ' Example response: [{"path": "path/to/file", "position": line number, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
@@ -42821,6 +42822,19 @@ const PROMPT_FOR_MORE_INFO =
   'ONLY include names in project files, not in inbuild/external libraries' +
   'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'))
 
+class ModelNames {
+  static models = {
+    GPT_3_5_TURBO: 'gpt-3.5-turbo',
+    GPT_3_5_TURBO_16K: 'gpt-3.5-turbo-16k',
+    GPT_4: 'gpt-4',
+    GPT_4_32K: 'gpt-4-32k'
+  }
+
+  static isModelValid(model_name) {
+    return Object.values(this.models).includes(model_name)
+  }
+}
+
 
 
 ;// CONCATENATED MODULE: ./src/llm_interface.js
@@ -42829,9 +42843,18 @@ const PROMPT_FOR_MORE_INFO =
 
 
 class OpenAIInterface {
-  GPT_MODEL = 'gpt-3.5-turbo'
-
-  constructor(api_key) {
+  constructor(api_key, gpt_model) {
+    if (!api_key) {
+      throw new Error('OpenAI API key is required')
+    }
+    if (!ModelNames.isModelValid(gpt_model)) {
+      throw new Error(
+        `Invalid GPT model name: ${gpt_model}. Valid models are: ${Object.values(
+          ModelNames.models
+        )}`
+      )
+    }
+    this.gpt_model = gpt_model
     this.openai = new openai({
       apiKey: api_key
     })
@@ -42839,7 +42862,7 @@ class OpenAIInterface {
 
   async getCommentsonPR(code_changes) {
     const response = await this.openai.chat.completions.create({
-      model: this.GPT_MODEL,
+      model: this.gpt_model,
       messages: [
         {
           role: 'system',
@@ -42876,6 +42899,7 @@ const core = __nccwpck_require__(2186)
 const github = __nccwpck_require__(5438)
 
 const OPENAI_KEY = core.getInput('openai-key')
+const GPT_MODEL = core.getInput('gpt-model')
 
 /**
  * The main function for the action.
@@ -42883,6 +42907,7 @@ const OPENAI_KEY = core.getInput('openai-key')
  */
 async function run() {
   try {
+    console.log('Starting PR review action with GPT model: ', GPT_MODEL)
     const pr_context = github.context.payload.pull_request
     const pull_request = new src_pull_request.PullRequest(pr_context)
     await pull_request.getDiffString()
@@ -42892,7 +42917,7 @@ async function run() {
 
     console.log('Formatted changes are: ', reviewer.fomatted_changes)
 
-    const openai_interface = new OpenAIInterface(OPENAI_KEY)
+    const openai_interface = new OpenAIInterface(OPENAI_KEY, GPT_MODEL)
     const comments_list = await openai_interface.getCommentsonPR({
       title: pr_context.title,
       description: pr_context.body,

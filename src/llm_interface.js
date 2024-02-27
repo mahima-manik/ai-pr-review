@@ -1,11 +1,20 @@
 import OpenAI from 'openai'
 
-import { PROMPT_FOR_PR_REVIEW } from './constants'
+import { PROMPT_FOR_PR_REVIEW, ModelNames } from './constants'
 
 class OpenAIInterface {
-  GPT_MODEL = 'gpt-3.5-turbo'
-
-  constructor(api_key) {
+  constructor(api_key, gpt_model) {
+    if (!api_key) {
+      throw new Error('OpenAI API key is required')
+    }
+    if (!ModelNames.isModelValid(gpt_model)) {
+      throw new Error(
+        `Invalid GPT model name: ${gpt_model}. Valid models are: ${Object.values(
+          ModelNames.models
+        )}`
+      )
+    }
+    this.gpt_model = gpt_model
     this.openai = new OpenAI({
       apiKey: api_key
     })
@@ -13,7 +22,7 @@ class OpenAIInterface {
 
   async getCommentsonPR(code_changes) {
     const response = await this.openai.chat.completions.create({
-      model: this.GPT_MODEL,
+      model: this.gpt_model,
       messages: [
         {
           role: 'system',

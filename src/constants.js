@@ -5,6 +5,7 @@ const PROMPT_FOR_PR_REVIEW =
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
   ' - Position value equals the number of lines down from the first "@@" hunk header, starting with 1, in the file you want to add a comment.' +
+  ' The position in the diff continues to increase through lines of whitespace and additional hunks until the beginning of a new file.' +
   ' Example response: [{"path": "path/to/file", "position": line number, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
@@ -15,4 +16,17 @@ const PROMPT_FOR_MORE_INFO =
   'ONLY include names in project files, not in inbuild/external libraries' +
   'Example: ["function_name", "class_name", "constant_name"]. If no more information is required, return an empty list.'
 
-export { PROMPT_FOR_PR_REVIEW, PROMPT_FOR_MORE_INFO }
+class ModelNames {
+  static models = {
+    GPT_3_5_TURBO: 'gpt-3.5-turbo',
+    GPT_3_5_TURBO_16K: 'gpt-3.5-turbo-16k',
+    GPT_4: 'gpt-4',
+    GPT_4_32K: 'gpt-4-32k'
+  }
+
+  static isModelValid(model_name) {
+    return Object.values(this.models).includes(model_name)
+  }
+}
+
+export { PROMPT_FOR_PR_REVIEW, PROMPT_FOR_MORE_INFO, ModelNames }
