@@ -24,8 +24,9 @@ class ModelNames {
     GPT_4: 'gpt-4',
     GPT_4_32K: 'gpt-4-32k'
   }
+
   static isModelValid(model_name) {
-    return ModelNames.models.has(model_name)
+    return Object.values(this.models).includes(model_name)
   }
 }
 
