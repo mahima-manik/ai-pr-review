@@ -42827,8 +42827,13 @@ class ModelNames {
   static GPT_4 = 'gpt-4'
   static GPT_4_32K = 'gpt-4-32k'
 
-  isModelValid(model) {
-    return Object.values(ModelNames).includes(model)
+  static isModelValid(model) {
+    return (
+      model === ModelNames.GPT_3_5_TURBO ||
+      model === ModelNames.GPT_3_5_TURBO_16K ||
+      model === ModelNames.GPT_4 ||
+      model === ModelNames.GPT_4_32K
+    )
   }
 }
 
