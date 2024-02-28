@@ -38827,6 +38827,12 @@ class AIReviewer {
     })
   }
 
+  isHunkLine(line) {
+    // Matches the start of a hunk definition, e.g., "@@ -1,3 +4,6 @@"
+    const hunkPattern = /^@@ -\d+,\d+ \+\d+,\d+ @@/
+    return hunkPattern.test(line)
+  }
+
   async formatPrChanges() {
     const raw_diff_string = await this.pull_request.getDiffString()
     const files_to_ignore = await this.getIgnoreList()
@@ -38834,6 +38840,7 @@ class AIReviewer {
     // Remove the file and its diff from raw_diff_string if it is in files_to_ignore
     let current_file = ''
     let current_diff = []
+    let skip_lines = 0
     this.fomatted_changes = []
 
     for (const line of diff_lines) {
@@ -38849,8 +38856,13 @@ class AIReviewer {
         }
         current_file = line.split(' b/')[1]
         current_diff = []
+        skip_lines = 3
+      } else if (skip_lines > 0) {
+        skip_lines--
+        continue
+      } else if (!this.isHunkLine(line)) {
+        current_diff.push(line)
       }
-      current_diff.push(line)
     }
     // Add the last file
     if (
@@ -42810,8 +42822,7 @@ const PROMPT_FOR_PR_REVIEW =
   ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
-  ' - Position value equals the number of lines down from the first "@@" hunk header. Line below first hunk in the file starts with 1 and so on.' +
-  ' The position in the diff continues to increase through lines of whitespace, line additions/deletions and  and additional hunks until the beginning of a new file.' +
+  ' - Position value is the list index in diff starting with 1' +
   ' Example response: [{"path": "path/to/file", "position": line number, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
