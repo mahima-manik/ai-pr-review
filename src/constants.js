@@ -1,10 +1,10 @@
 const PROMPT_FOR_PR_REVIEW =
-  'You are reviewing PR on Github as a developer. Input contains PR title, description and list of changes.' +
+  'You are reviewing PR on Github as a developer. Input contains PR title, description and list of changes in .diff format.' +
   ' - Review the code changes carefully. Look for potential bugs, edge cases, or logic errors' +
   ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
-  ' - Position value equals the number of lines down from the first "@@" hunk header, starting with 1, in the file you want to add a comment.' +
+  ' - Position value equals the number of lines down from the first "@@" hunk header. Line below first hunk in the file starts with 1 and so on.' +
   ' The position in the diff continues to increase through lines of whitespace and additional hunks until the beginning of a new file.' +
   ' Example response: [{"path": "path/to/file", "position": line number, "body": "comment"}, ...]'
 
