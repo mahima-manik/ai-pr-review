@@ -4,8 +4,7 @@ const PROMPT_FOR_PR_REVIEW =
   ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
-  ' - NOTE: Position is the list index in changes diff on which you want to comment' +
-  ' Example response: [{"path": "path/to/file", "position": line number, "body": "comment"}, ...]'
+  ' - NOTE: Position is the list index/line number in changes diff on which you want to comment.'
 
 const PROMPT_FOR_MORE_INFO =
   'You are a developer reviewing a Pull request.' +
@@ -52,7 +51,7 @@ const FUNCTION_CALL_SCHEMA = [
                 position: {
                   type: 'integer',
                   description:
-                    'The position in the diff where you want to add a review comment'
+                    'Relative line number in the file diff where the comment should be added'
                 },
                 body: {
                   type: 'string',
