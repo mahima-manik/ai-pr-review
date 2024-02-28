@@ -42835,6 +42835,47 @@ class ModelNames {
   }
 }
 
+const FUNCTION_CALL_SCHEMA = [
+  {
+    type: 'function',
+    function: {
+      name: 'add_comments_to_pr',
+      description:
+        'Add list of comments to PR reviewed. Each comment has path, position and body.',
+      parameters: {
+        type: 'object',
+        properties: {
+          list_of_comments: {
+            type: 'array',
+            description: 'List of comments to add on a file in the PR',
+            items: {
+              type: 'object',
+              properties: {
+                path: {
+                  type: 'string',
+                  description:
+                    'The relative path to the file that necessitates a review comment'
+                },
+                position: {
+                  type: 'integer',
+                  description:
+                    'The position in the diff where you want to add a review comment'
+                },
+                body: {
+                  type: 'string',
+                  description: 'Text of the review comment'
+                }
+              },
+              required: ['path', 'position', 'body']
+            }
+          }
+        },
+        required: ['list_of_comments']
+      }
+    }
+  }
+]
+
 
 
 ;// CONCATENATED MODULE: ./src/llm_interface.js
@@ -42869,20 +42910,39 @@ class OpenAIInterface {
           content: PROMPT_FOR_PR_REVIEW
         },
         { role: 'user', content: JSON.stringify(code_changes) }
-      ]
+      ],
+      tools: FUNCTION_CALL_SCHEMA,
+      tool_choice: {
+        type: 'function',
+        function: { name: 'add_comments_to_pr' }
+      }
     })
+
     try {
-      console.log('Response from OpenAI: ', response.choices[0].message.content)
-      const more_info_list = JSON.parse(response.choices[0].message.content)
-      return more_info_list
+      console.log(
+        'OpenAI response: ',
+        JSON.stringify(response.choices[0].message)
+      )
+      const comments = this.execute_function_call(response)
+      return comments
     } catch (error) {
       console.log(
         'Error parsing response from OpenAI: ',
-        response.choices[0].message.content,
+        response.choices[0].message,
         error
       )
       return []
     }
+  }
+
+  execute_function_call(openai_response) {
+    const function_details =
+      openai_response.choices[0].message.tool_calls[0].function
+    if (function_details.name === 'add_comments_to_pr') {
+      const function_arguments = JSON.parse(function_details.arguments)
+      return function_arguments.list_of_comments
+    }
+    throw new Error('Invalid function call')
   }
 }
 

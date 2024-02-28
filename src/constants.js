@@ -29,4 +29,50 @@ class ModelNames {
   }
 }
 
-export { PROMPT_FOR_PR_REVIEW, PROMPT_FOR_MORE_INFO, ModelNames }
+const FUNCTION_CALL_SCHEMA = [
+  {
+    type: 'function',
+    function: {
+      name: 'add_comments_to_pr',
+      description:
+        'Add list of comments to PR reviewed. Each comment has path, position and body.',
+      parameters: {
+        type: 'object',
+        properties: {
+          list_of_comments: {
+            type: 'array',
+            description: 'List of comments to add on a file in the PR',
+            items: {
+              type: 'object',
+              properties: {
+                path: {
+                  type: 'string',
+                  description:
+                    'The relative path to the file that necessitates a review comment'
+                },
+                position: {
+                  type: 'integer',
+                  description:
+                    'The position in the diff where you want to add a review comment'
+                },
+                body: {
+                  type: 'string',
+                  description: 'Text of the review comment'
+                }
+              },
+              required: ['path', 'position', 'body']
+            }
+          }
+        },
+        required: ['list_of_comments']
+      }
+    }
+  }
+]
+
+export {
+  PROMPT_FOR_PR_REVIEW,
+  PROMPT_FOR_MORE_INFO,
+  FUNCTION_CALL_SCHEMA,
+  ModelNames
+}
