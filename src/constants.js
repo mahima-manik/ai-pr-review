@@ -4,7 +4,7 @@ const PROMPT_FOR_PR_REVIEW =
   ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
   ' - Only provide the comments that you are confident about.' +
   ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
-  ' - Position value is the list index in diff starting with 1' +
+  ' - NOTE: Position is the list index in changes diff' +
   ' Example response: [{"path": "path/to/file", "position": line number, "body": "comment"}, ...]'
 
 const PROMPT_FOR_MORE_INFO =
