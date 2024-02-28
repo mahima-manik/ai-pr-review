@@ -42821,8 +42821,7 @@ const PROMPT_FOR_PR_REVIEW =
   ' - Review the code changes carefully. Look for potential bugs, edge cases, or logic errors' +
   ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
   ' - Only provide the comments that you are confident about.' +
-  ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
-  ' - NOTE: Position is the list index/line number in changes diff on which you want to comment.'
+  ' - Each comment has path, position and body. Position is the line number in the diff, starting from 1, where you want to add a review comment.'
 
 const PROMPT_FOR_MORE_INFO =
   (/* unused pure expression or super */ null && ('You are a developer reviewing a Pull request.' +
@@ -42869,7 +42868,7 @@ const FUNCTION_CALL_SCHEMA = [
                 position: {
                   type: 'integer',
                   description:
-                    'Relative line number in the file diff where the comment should be added'
+                    'The position in the diff where you want to add a review comment'
                 },
                 body: {
                   type: 'string',
