@@ -1,11 +1,3 @@
-const PROMPT_FOR_PR_REVIEW =
-  'You are reviewing PR on Github as a developer. Input contains PR title, description and list of filename and .diff changes.' +
-  ' - Lines starting with + are added, - are removed and others are unchanged' +
-  ' - Review the code changes carefully. Look for potential bugs, edge cases, or logic errors' +
-  ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
-  ' - Only provide the comments that you are confident about with path, position and body.' +
-  ' Diff changes are given as list. Position in comment is the code index in the diff list, starting from 1, where you want to add a review comment.'
-
 const PROMPT_FOR_MORE_INFO =
   'You are a developer reviewing a Pull request.' +
   'The code change is a list of dictionary. ' +
@@ -68,9 +60,4 @@ const FUNCTION_CALL_SCHEMA = [
   }
 ]
 
-export {
-  PROMPT_FOR_PR_REVIEW,
-  PROMPT_FOR_MORE_INFO,
-  FUNCTION_CALL_SCHEMA,
-  ModelNames
-}
+export { PROMPT_FOR_MORE_INFO, FUNCTION_CALL_SCHEMA, ModelNames }

@@ -42816,14 +42816,6 @@ var openai_fileFromPath = fileFromPath;
 /* harmony default export */ const openai = (OpenAI);
 //# sourceMappingURL=index.mjs.map
 ;// CONCATENATED MODULE: ./src/constants.js
-const PROMPT_FOR_PR_REVIEW =
-  'You are reviewing PR on Github as a developer. Input contains PR title, description and list of filename and .diff changes.' +
-  ' - Lines starting with + are added, - are removed and others are unchanged' +
-  ' - Review the code changes carefully. Look for potential bugs, edge cases, or logic errors' +
-  ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
-  ' - Only provide the comments that you are confident about with path, position and body.' +
-  ' Diff changes are given as list. Position in comment is the code index in the diff list, starting from 1, where you want to add a review comment.'
-
 const PROMPT_FOR_MORE_INFO =
   (/* unused pure expression or super */ null && ('You are a developer reviewing a Pull request.' +
   'The code change is a list of dictionary. ' +
@@ -42892,6 +42884,7 @@ const FUNCTION_CALL_SCHEMA = [
 
 
 
+const PROMPT_FOR_PR_REVIEW = process.env.PROMPT_FOR_PR_REVIEW
 
 class OpenAIInterface {
   constructor(api_key, gpt_model) {
@@ -42912,6 +42905,11 @@ class OpenAIInterface {
   }
 
   async getCommentsonPR(code_changes) {
+    console.log(
+      'Getting comments from OpenAI for PR: ',
+      JSON.stringify(code_changes)
+    )
+    console.log('Prompt for PR review: ', PROMPT_FOR_PR_REVIEW)
     const response = await this.openai.chat.completions.create({
       model: this.gpt_model,
       messages: [
