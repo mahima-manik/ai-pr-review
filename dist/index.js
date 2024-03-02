@@ -38827,6 +38827,12 @@ class AIReviewer {
     })
   }
 
+  isHunkLine(line) {
+    // Matches the start of a hunk definition, e.g., "@@ -1,3 +4,6 @@"
+    const hunkPattern = /^@@ -\d+,\d+ \+\d+,\d+ @@/
+    return hunkPattern.test(line)
+  }
+
   async formatPrChanges() {
     const raw_diff_string = await this.pull_request.getDiffString()
     const files_to_ignore = await this.getIgnoreList()
@@ -38834,6 +38840,7 @@ class AIReviewer {
     // Remove the file and its diff from raw_diff_string if it is in files_to_ignore
     let current_file = ''
     let current_diff = []
+    let skip_lines = 0
     this.fomatted_changes = []
 
     for (const line of diff_lines) {
@@ -38849,8 +38856,13 @@ class AIReviewer {
         }
         current_file = line.split(' b/')[1]
         current_diff = []
+        skip_lines = 3
+      } else if (skip_lines > 0) {
+        skip_lines--
+        continue
+      } else if (!this.isHunkLine(line)) {
+        current_diff.push(line)
       }
-      current_diff.push(line)
     }
     // Add the last file
     if (
@@ -42804,16 +42816,6 @@ var openai_fileFromPath = fileFromPath;
 /* harmony default export */ const openai = (OpenAI);
 //# sourceMappingURL=index.mjs.map
 ;// CONCATENATED MODULE: ./src/constants.js
-const PROMPT_FOR_PR_REVIEW =
-  'You are reviewing PR on Github as a developer. Input contains PR title, description and list of changes in .diff format.' +
-  ' - Review the code changes carefully. Look for potential bugs, edge cases, or logic errors' +
-  ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
-  ' - Only provide the comments that you are confident about.' +
-  ' - Return ONLY list of comments as response. If you have no comments, return an empty list.' +
-  ' - Position value equals the number of lines down from the first "@@" hunk header. Line below first hunk in the file starts with 1 and so on.' +
-  ' The position in the diff continues to increase through lines of whitespace, line additions/deletions and  and additional hunks until the beginning of a new file.' +
-  ' Example response: [{"path": "path/to/file", "position": line number, "body": "comment"}, ...]'
-
 const PROMPT_FOR_MORE_INFO =
   (/* unused pure expression or super */ null && ('You are a developer reviewing a Pull request.' +
   'The code change is a list of dictionary. ' +
@@ -42835,12 +42837,54 @@ class ModelNames {
   }
 }
 
+const FUNCTION_CALL_SCHEMA = [
+  {
+    type: 'function',
+    function: {
+      name: 'add_comments_to_pr',
+      description:
+        'Add list of comments to PR reviewed. Each comment has path, position and body.',
+      parameters: {
+        type: 'object',
+        properties: {
+          list_of_comments: {
+            type: 'array',
+            description: 'List of comments to add on a file in the PR',
+            items: {
+              type: 'object',
+              properties: {
+                path: {
+                  type: 'string',
+                  description:
+                    'The relative path to the file that necessitates a review comment'
+                },
+                position: {
+                  type: 'integer',
+                  description:
+                    'The index in the diff where you want to add a review comment'
+                },
+                body: {
+                  type: 'string',
+                  description: 'Text of the review comment'
+                }
+              },
+              required: ['path', 'position', 'body']
+            }
+          }
+        },
+        required: ['list_of_comments']
+      }
+    }
+  }
+]
+
 
 
 ;// CONCATENATED MODULE: ./src/llm_interface.js
 
 
 
+const PROMPT_FOR_PR_REVIEW = process.env.PROMPT_FOR_PR_REVIEW
 
 class OpenAIInterface {
   constructor(api_key, gpt_model) {
@@ -42861,6 +42905,11 @@ class OpenAIInterface {
   }
 
   async getCommentsonPR(code_changes) {
+    console.log(
+      'Getting comments from OpenAI for PR: ',
+      JSON.stringify(code_changes)
+    )
+    console.log('Prompt for PR review: ', PROMPT_FOR_PR_REVIEW)
     const response = await this.openai.chat.completions.create({
       model: this.gpt_model,
       messages: [
@@ -42869,20 +42918,39 @@ class OpenAIInterface {
           content: PROMPT_FOR_PR_REVIEW
         },
         { role: 'user', content: JSON.stringify(code_changes) }
-      ]
+      ],
+      tools: FUNCTION_CALL_SCHEMA,
+      tool_choice: {
+        type: 'function',
+        function: { name: 'add_comments_to_pr' }
+      }
     })
+
     try {
-      console.log('Response from OpenAI: ', response.choices[0].message.content)
-      const more_info_list = JSON.parse(response.choices[0].message.content)
-      return more_info_list
+      console.log(
+        'OpenAI response: ',
+        JSON.stringify(response.choices[0].message)
+      )
+      const comments = this.execute_function_call(response)
+      return comments
     } catch (error) {
       console.log(
         'Error parsing response from OpenAI: ',
-        response.choices[0].message.content,
+        response.choices[0].message,
         error
       )
       return []
     }
+  }
+
+  execute_function_call(openai_response) {
+    const function_details =
+      openai_response.choices[0].message.tool_calls[0].function
+    if (function_details.name === 'add_comments_to_pr') {
+      const function_arguments = JSON.parse(function_details.arguments)
+      return function_arguments.list_of_comments
+    }
+    throw new Error('Invalid function call')
   }
 }
 
