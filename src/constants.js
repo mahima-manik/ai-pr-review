@@ -1,9 +1,10 @@
 const PROMPT_FOR_PR_REVIEW =
-  'You are reviewing PR on Github as a developer. Input contains PR title, description and list of changes in .diff format.' +
+  'You are reviewing PR on Github as a developer. Input contains PR title, description and list of filename and .diff changes.' +
+  ' - Lines starting with + are added, - are removed and others are unchanged' +
   ' - Review the code changes carefully. Look for potential bugs, edge cases, or logic errors' +
   ' - Be clear and provide actionable feedback. For improvements, explain why they are needed.' +
-  ' - Only provide the comments that you are confident about.' +
-  ' - Each comment has path, position and body. Position is the line number in the diff, starting from 1, where you want to add a review comment.'
+  ' - Only provide the comments that you are confident about with path, position and body.' +
+  ' Diff changes are given as list. Position in comment is the code index in the diff list, starting from 1, where you want to add a review comment.'
 
 const PROMPT_FOR_MORE_INFO =
   'You are a developer reviewing a Pull request.' +
@@ -50,7 +51,7 @@ const FUNCTION_CALL_SCHEMA = [
                 position: {
                   type: 'integer',
                   description:
-                    'The position in the diff where you want to add a review comment'
+                    'The index in the diff where you want to add a review comment'
                 },
                 body: {
                   type: 'string',
